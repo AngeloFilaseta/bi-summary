@@ -1,0 +1,58 @@
+\section{Esercizi di ETL (Laboratorio -  MODULO 2)}
+\textbf{Scopo:}\newline
+Lo scopo è creare un flusso per popolare le tabelle delle DT.\newline
+Siamo partiti in modo incrementale, iniziando con un semplice flusso che evolveremo nel tempo:
+\begin{itemize}
+	\item \textbf{Flusso semplice - Pulizia}: \begin{itemize}
+		\item Si parte dalla tabella sorgente;
+		\item Si crea un'operazione di pulizia, che rimuove i campi inutili e rinomina quelli presenti, magari rimuovendo eventuali prefissi;
+		\item Carica i dati sulla tabella destinazione. 
+	\end{itemize}
+	\centeredImage{img/mod2/labetl1.png}{Flusso ETL - Flusso semplice}{0.5}
+	Ma mancano ancora dei passi, i dati vengono sempre riscritti da capo, non c'è nessuna differenza tra il modo in cui vengono trattati i dati vecchi e i dati nuovi. Inoltre manca ancora l'aggiunta di chiavi surrogate.
+	\item \textbf{Flusso con alimentazione incrementale}:
+	L'ideale sarebbe aggiungere solo i dati nuovi ed effettuare le modifiche ai dati vecchi senza riscrivere tutto. Il software che utilizziamo (Tableau Prep) non sopporta l'aggiornamento incrementale nativamente come lo vogliamo noi (ovvero non sopporta il caso in cui dati già presenti vengono modificati).\newline
+	Ciò di cui abbiamo bisogno è una struttura del seguente tipo:
+	\centeredImage{img/mod2/labetl2.png}{Flusso ETL - Alimentazione incrementale - Soluzione Articolata}{0.7}
+	\begin{itemize}
+		\item Si effettuano diversi join tra la tabella del DB operazionale e la tabella della DT:
+		\begin{itemize}
+			\item Il join più in alto serve per identificare i nuovi record. Il join utilizzato prende in considerazione le chiavi che sono presenti solo nel DB operazionale.
+			\item Il join centrale identifica tutte le righe che sono già presenti in entrambe le tabelle. Questo è il caso in cui dobbiamo verificare se ci sono cambiamenti. nei dati che abbiamo già.
+			\item Il join finale prende in considerazione solo i record che sono presenti nella DT e che quindi sono stati eliminati dalla tabella operazionale. Questo flusso ci permette di trattare in modo diverso i dati "vecchi" che devono comunque essere trattati in qualche modo e non eliminati.
+		\end{itemize}
+		A questo punto normalizziamo le strutture dati rendendole tutte consistenti tra loro ed effettuiamo l'operazione di unione. A questo punto possiamo popolare la DT.
+		\begin{warn}
+			Per una limitazione di Tableau siamo costretti in questo caso a sostitutire tutti i dati.
+		\end{warn}
+	\end{itemize}
+	\item \textbf{Flusso con alimentazione incrementale semplificata}:
+	Una soluzione identica a quella sopra riportata ma che utilizza meno join è la seguente.
+	\centeredImage{img/mod2/labetl3.png}{Flusso ETL - Alimentazione incrementale - Soluzione Semplificata}{0.6}
+	In questo caso si effettua un full outer join. Otterremo una tabella che contiene tutti i dati ma NULL in corrispondenza dei campi mancanti. Nel passo di pulizia poi attraverso l'opzione \textit{Campo Calcolato} si può creare un campo attraverso uno script, per esempio, per inserire il campo \textit{size} la regola da utilizzare è: 
+	\begin{verbatim}
+		IF(ISNULL([size])) THEN [dt_size] ELSE [size] END
+	\end{verbatim}
+	Ovviamente è necessario creare un campo calcolato per ogni attributo che desideriamo mantenere.
+	\item \textbf{Flusso con Chiave Surrogata}:
+	Serve utilizzare una tabella in più per mantenere le corrispondenze tra surrogato e chiave della tabella di partenza:
+	\begin{verbatim}
+		create table hash_dt_part (
+		partkey integer primary key,
+		id serial
+		);
+	\end{verbatim}
+	\centeredImage{img/mod2/labetlsurrogate1.png}{Flusso ETL - Chiave surrogata}{0.85}
+	\begin{itemize}
+		\item Si identificano con un join i nuovi record;
+		\item Si mantiene solo la chiave primaria della tabella sorgente;
+		\item Si inserisce nella tabella di corrispondenza il valore della chiave primaria, associato ad un surrogato auto generato dal DBMS.
+		\item All'interno della DT bisogna ora utilizzare gli ID surrogati e non più la chiave primaria sorgente.
+	\end{itemize}
+	\item \textbf{Flusso finale}:
+	\centeredImage{img/mod2/labetlsurrogate2.png}{Flusso ETL - Chiave surrogata con alimentazione incrementale}{0.85}
+	\centeredImage{img/mod2/labetlsurrogate3.png}{Flusso ETL - Chiave surrogata con alimentazione incrementale semplificata}{0.85}
+\end{itemize}
+\centeredImage{img/mod2/etlrefschema.png}{Schema di riferimento per la modellazione}{0.75}
+
+\newpage

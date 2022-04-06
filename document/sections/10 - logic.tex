@@ -1,0 +1,343 @@
+\section{Progettazione Logica}
+La struttura multidimesionale dei dati può essere rappresentata utilizzando due diversi modelli logici:
+\begin{itemize}
+	\item \textbf{MOLAP(Multidimensional On-Line Analytical Processing)}: Memorizziamo i dati in strutture multidimensionali.
+	\item \textbf{ROLAP(Relational On-Line Analytical Processing)}: Utilizziamo il modello relazionale per rappresentare dati multidimensionali.
+\end{itemize}
+\subsection{MOLAP e HOLAP}
+La soluzione MOLAP è molto meno utilizzata:
+\begin{itemize}
+	\item Può fornire buone prestazioni. Le operazioni non devono essere simulate mediante complesse istruzioni SQL.
+	\item Esiste un problema di sparsità, in media solo il 20\% delle celle dei cubi contiene effettivamente delle informazioni.
+	\item Non esistono standard per la rappresentazione, i diversi fornitori utilizzano strutture proprietarie che rendono difficile sostituire o aggiornare l'infrastruttura.
+	\item Rinunciare ai sistemi relazionali è complicato anche per le figure aziendali che conoscono bene e hanno lavorato a lungo proprio su questo tipo di tecnologia.
+\end{itemize}
+Il problema della sparsità si può affrontare suddividendo in dimensioni un cubo n-dimensionale in sottocubi n-dimensionali (chunk). Il partizionamento è conveniente perché spesso i dati non sono sparsi in maniera uniforme. I chunk vengono quindi distinti in chunk più densi e chunk più sparsi, al fine di evitare spreco di spazio dovuto alla rappresentazione di celle che non contengono informazioni i chunk più sparsi possono essere rappresentati in maniera differente. Di solito si utilizza un indice che riporta l'offset delle celle che contengono informazioni.\newline\newline
+Esiste un tipo di architettura che prende il nome di HOLAP in cui ROLAP e MOLAP vengono usate simultaneamente. In questo caso l'architettura ROLAP viene utilizzata all'interno del Data Warehouse. MOLAP viene invece utilizzato all'interno di alcuni cubi che reperiscono dati dal Data Warehouse in una qualche forma più aggregata o meno sparsa. Di solito questi cubi possono anche essere creati "al volo" per svolgere alcune sessioni di analisi specifiche. ROLAP è più adatto alla gestione di grandi quantità di dati, quindi è piuttosto adatto per la gestione del DW. MOLAP al contrario viene utilizzato al livello più basso dove il dato è in una forma diversa e più aggregata per massimizzare la velocità di accesso ai dati.\newline
+\centeredImage{img/holap.PNG}{Architettura HOLAP}{0.5}
+
+\subsection{ROLAP}
+\subsubsection{Schema a Stella}
+La modellazione multidimensionale nel mondo relazionale è basata sullo schema a stella.
+Uno schema a stella è composto da due tipi di tabelle, le dimension table $DT_1, ... DT_n$ e una fact table $FT$.
+Di dimension table ce n'è una per dimensione, ciascuna ha una chiave surrogata più tanti attributi che includono la dimensione e tutti i possibili livelli di aggregazione.\newline
+Nella fact table ci sono tante foreign key, ognuna importata dalle diverse dimension table. Tutte queste foreign key insieme creano la chiave primaria della fact table.
+\centeredImage{img/star schema.PNG}{Esempio di schema a Stella}{0.7}
+\centeredImage{img/istanze_star.PNG}{Esempio di schema a Stella - Istanze}{0.7}
+\noindent Importantissimo notare che le tabelle in questo caso non sono normalizzate, in particolare le $DT$ non rispettano la terza forma normale.
+\begin{info}
+	La prima forma normale è rispettata perché non esistono attributi non atomici, la seconda è rispettata perché le chiavi non sono composte, e quindi a prescindere non possono esistere dipendenze parziali.
+\end{info}
+Ma allora perché si dovrebbe denormalizzare? Per diminuire il numero di Join. Infatti gli unici join possibili in questo modo sono quelli tra la fact table e le $DT$. Il motivo è quindi puramente prestazionale. Il contro, come in ogni caso in cui c'è denormalizzazione è la presenza di ridondanza. Nel caso dell'esempio sopra, nella $DT$ negozi Pesaro può comparire più volte in Italia.
+Inoltre non abbiamo problemi di sparsità perché i record vengono registrati solo se un evento accade. 
+\begin{warn}
+	Normalmente ci sarebbe anche un problema di inconsistenze. Il problema in ambito Data Mart però non ci tocca, perché l'ETL garantisce che le inconsistenze non ci siano.
+\end{warn}
+\subsubsection{Snowflake Schema}
+Molto simile allo schema a stella, ma riduce la denormalizzazione delle $DT$ eliminando alcune delle dipendenze transitive che le caratterizzano. In questo caso si effettua una classica normalizzazione aggiungendo una foreign key nella $DT$ di partenza che va verso la primary key di una nuova $DT$.
+\centeredImage{img/snowflake.PNG}{Esempio di snowflake schema}{0.7}
+\noindent Nell'esempio riportato sopra abbiamo normalizzato, staccando per esempio il concetto di città da quello dei negozi. In questo modo stiamo dicendo che Pesaro si trova in Italia una volta sola.\newline
+\textit{In questo modo le tabelle sono tutte in terza forma normale?}\newline
+Potremmo pensare di poter normalizzare ulteriormente creando un'ulteriore $DT$ per Stato e provare a raggiungere così la terza forma normale, ma anche in questo caso sarebbe impossibile, perché ID\_Città $\xrightarrow{}$ Città $\xrightarrow{}$ ID\_Stato. Questo accade perché abbiamo un surrogato (ID\_Città), ma Città è una possibile chiave alternativa, e quindi la dipendenza tra la chiave alternativa e la foreign key resterà sempre, rendendo impossibile la rimozione della dipendenza transitiva e quindi la normalizzazione in terza forma normale.\newline
+In linea generale con lo snowflake schema guadagnamo spazio perché eliminiamo ridondanze, ma è anche vero che aggiungiamo attributi che prima non c'erano, in particolare i surrogati. In alcuni casi particolari quindi lo snowflake schema può occupare leggermente di più di uno star schema.\newline
+In termine di prestazioni lo snowflake generalmente richiede più join e quindi è più dispendioso, ma dipende dalle interrogazioni. Se non dobbiamo effettuare Join sulle $DT$ secondarie potrebbe addirittura capitare di avere prestazioni migliori.\newline\newline
+La normalizzazione dello schema Snowflake non può essere fatta a caso, bisogna sempre seguire il flusso delle dipendenze funzionali, altrimenti si perde la ricostruibilità della relazione di partenza.
+\centeredImage{img/how_to_snowflake.png}{How to Snowflake 101}{0.7}
+\noindent Per effettuare snowflaking si sceglie un arco. L'attributo di partenza e tutti i suoi fratelli restano della tabella di partenza, a cui si aggiunge però una chiave esterna surrogata che rappresenta il collegamento con la chiave primaria della nuova tabella.\newline
+Nella nuova tabella, oltre alla chiave surrogata finiscono tutti gli attributi a partire dal nodo di destinazione dell'arco cancellato, insieme a tutti i suoi fratelli e ai suoi figli.\newline
+\subsection{Le viste}
+Si tratta del principale strumento di ottimizzazione delle prestazioni che abbiamo a disposizione nelle piattaforme ROLAP.\newline
+In fase progettuale è possibile creare delle viste, ovvero delle fact table che contengono dati già aggregati in un certo modo.\newline Una vista viene identificata sulla base di un group-by-set.
+\centeredImage{img/viste.png}{Esempi di viste}{0.7}
+\noindent Nell'esempio riportato sopra, $v_1$ rappresenta la vista con il livello di aggregazione più fine possibile. Da $v_1$ si può passare a $v_2$ aggregando su negozio, e così via. Cosa rappresentano gli archi? Perché tra $v_2$ e $v_3$ non c'è un arco?\newline
+L'arco rappresenta uno step di aggregazione, da $v_2$ non si può passare a $v_3$ perché hanno un diverso livello di aggregazione su dimensioni diverse. La struttura dati utilizzata per rappresentare le diverse viste in diversi livelli di aggregazione è chiamata reticolo.\newline\newline
+I dati a livello $v_1$ sono sicuramente presenti perché la vista è rappresentata dai dati al livello più fine possibile. Il progettista può decidere di materializzare delle viste, per esempio in questo caso possiamo provare a materializzare $v_4$ e $v_3$.\newline
+In questo modo nello storage (fisico) abbiamo i dati aggregati in tre modi diversi, a seconda delle viste che abbiamo scelto.\newline\newline
+\textbf{Se a questo punto l'utente lancia una query "group by $v_2$" su quali tabelle può essere eseguita?}\newline Solo su $v_1$.
+\textbf{Se l'utente lancia una query "group by $v_3$" su quali tabelle può essere eseguita?}\newline Solo su $v_1$ e $v_3$, ma è più furbo farlo su $v_3$.
+\textbf{Se l'utente lancia una query "group by $v_5$" su quali tabelle può essere eseguita?}\newline Su tutte e 3, tra queste tre la migliore da scegliere è la più piccola tra le due, perché ha meno righe.\newline\newline
+Le viste sono tante quanti sono i group-by-set.
+\centeredImage{img/viste2.png}{Reticolo multidimensionale - tutte le possibili viste}{0.7}
+\noindent La vista più in alto in questo reticolo multidimensionale rappresenta il livello più fine possibile, ovvero l'insieme delle dimensioni, mentre nell'ultimo ho sempre il group-by vuoto, in mezzo ho tutti gli altri.\newline
+\begin{warn}
+	Nei compiti può capitare che venga richiesto di disegnare un reticolo multidimensionale. 
+\end{warn}
+Se decido di materializzare una vista, posso lanciare query sulla tabella relativa a quella stessa vista, ma posso anche partire da quella per arrivare a tutte le viste che stanno sotto, effettuando qualche passo di aggregazione in più.\newline
+L'utilità del reticolo permette infatti di vedere per quali group-by è utilizzabile una vista.\newline
+Se scegliamo di materializzare viste che stanno più in alto occuperremo anche più spazio, ma possiamo utilizzarle più spesso. Scegliendo una vista che sta in basso occuperemo molto meno spazio, ma la useremo anche molte meno volte.\newline
+Si sconsiglia quindi di creare viste alla cieca, perché non si può sapere a priori  quali verranno utilizzate e quanto. Bisognerebbe sempre almeno farsi un'idea del carico di lavoro, e in funzione delle esigenze si scelgono i group-by-set più utilizzati, materializzando proprio quelle viste.\newline
+\subsubsection{Problemi con le viste}
+Lavorando con viste aggregate possono nascere dei problemi:
+\begin{itemize}
+	\item \textbf{Misure Derivate}:
+	\centeredImage{img/viste_problemi.png}{Viste - Problemi con le misure derivate}{0.6}
+	In questo caso, senza livelli di aggregazione l'incasso è calcolabile al volo con una semplice formula, non c'è bisogno di materializzare la colonna incasso perché a partire dalle colonne esistenti è sempre possibile ottenere un valore corretto.\newline
+	Aggregando su \textit{Tipo} le quantità vengono sommate e il prezzo viene riformulato con la media di tutti i prezzi dei prodotti di quel tipo. Ora, potrebbe capitare, come nel caso in esame che utilizzando la stessa formula utilizzata nella vista non aggregata i conti non tornino. Questo accade perché il prezzo medio è calcolato in funzione dei prezzi dei singoli prodotti, le cui quantità possono essere diverse.\newline
+	In questi casi non è più possibile calcolare \textit{Incasso} al volo, è necessario aggiungere preventivamente la colonna quando si calcola la vista, altrimenti risulterà impossibile a partire dai dati aggregati ottenere valori corretti.
+	\item \textbf{Misure di supporto}:
+	\centeredImage{img/support.png}{Viste - Misure di supporto}{0.6}
+	Esistono casi in cui l'aggregazione sul tempo potrebbe portare problemi, per esempio in questo caso con delle misure di livello. Calcolando i valori medi aggregando su un trimestre i valori medi che otteniamo sono quelli giusti, ma il valore medio totale non lo è. In questo caso il problema è che la media delle medie non restituisce il valore medio corretto. Per farlo, la media dovrebbe essere pesata. Proprio per questo motivo è necessario introdurre una colonna COUNT, che specifica da quanti elementi è stato ottenuto ogni valore medio. In questo modo è possibile pesare le medie parziali per ottenere un valore medio totale corretto anche a partire dalla vista aggregata.
+\end{itemize}
+\subsubsection{Classificazione degli operatori di supporto}
+I problemi sulle viste sono a causa degli operatori di aggregazioni utilizzati:
+\begin{itemize}
+	\item \textbf{Distributivi}: Sono quelli che preferiamo: Somma, massimo e minimo sono degli esempi. A partire da un aggregato parziale possiamo sempre calcolare il totale.
+	\item \textbf{Algebrici}: Per esempio la media. Non posso calcolare un totale a partire dal parziale a meno che io non abbia anche un numero finito di misure di supporto.
+	\item \textbf{Olistici}: Ci piacciono molto poco, ad esempio moda e mediana. Non è possibile mai a partire da parziali arrivare al totale. Per riuscirci avremmo bisogno di un numero infinito di misure di supporto, che è impossibile.
+\end{itemize}
+\begin{info}[Morale:]
+	Se abbiamo un cubo con soli operatori di aggregazione distributivi siamo a posto. Se abbiamo delle medie dobbiamo ricordarci di aggiungere misure di supporto (il count) quando materializziamo una vista. Nel caso di operatori olistici non possiamo fare certi calcoli specifici a partire da una vista troppo aggregata.
+\end{info}
+
+\subsubsection{Strutturazione delle tabelle delle viste}
+Esistono diversi metodi per istanziare fisicamente le viste:
+\begin{itemize}
+	\item \textbf{Unica Fact Table}: La soluzione più semplice è mantenere lo schema a stella ed inserire i dati aggregati nella stessa Fact Table in cui ci sono i dati non aggregati. Come facciamo poi a riconoscere quali dati appartengono ai diversi livelli di aggregazione? Attraverso un trucco.
+	\centeredImage{img/trucco.png}{Viste sulla stessa Fact Table}{0.6}
+	\noindent In questo caso i record sulla $DT$ sono a livelli di aggregazione diversi. I record con \textit{ID\_Prodotti} 5 e 6 hanno il valore di \textit{Prodotto} impostato a NULL, che sta a significare che l'aggregazione è su \textit{Tipo}.
+	I record sono poi collegati alla Fact Table che conterrà i dati al diverso livello di aggregazione. I record con \textit{ID\_Prodotti} 7 e 8 sono aggregati per Fornitore.
+	Il problema di questo approccio è che la Fact Table è già enorme, aggiungere ulteriori dati a diversi livelli di aggregazione porterà a diversi problemi di prestazioni. Anche le dimensioni delle $DT$ aumentano, senza contare che i NULL occupano comunque spazio. Questa soluzione non si usa praticamente mai.\newline
+	\item \textbf{Fact Table separate con Snowflaking}: Una soluzione per essere adeguata deve posizionare la vista su una Fact Table diversa. Utilizzando lo snowflaking potremmo pensare di poter riutilizzare alcune $DT$, come nell'esempio seguente:
+	\centeredImage{img/vistesnow.png}{VIste su Fact Table differenti utilizzando Snowflaking}{0.6}
+	\noindent In quetso caso quindi si effettua snowflaking sugli attributi sui cui desideriamo creare la vista.
+	\item \textbf{Fact Table separate senza Snowflaking}: Anche denominato Constellation Schema. In questo caso abbiamo ancora Fact Table differenti ma non effetuiamo Snowflaking sulle $DT$.\newline
+	La granularità utilizzata tra la fact table della vista e quella delle $DT$ però è diversa. Anche in questo caso si utilizza un trucco, lo stesso dei NULL di prima in realtà. Nelle $DT$ aggiungiamo delle righe in cui i valori aggregati presentano dei NULL in alcuni campi. In questo caso solo le dimensioni delle $DT$ crescono mentre abbiamo una separazione maggiore tra le Fact Table.
+	\centeredImage{img/constellation.png}{Viste su Fact Table differenti senza Snowflaking}{0.6}
+	\item \textbf{Fact Table separate e DT separate}: In questo caso sia le Fact Table che le $DT$ sono concetti completamente staccati tra viste diverse. In questo caso stiamo utilizzano tantissimo spazio ma abbiamo una ottimizzazione assoluta e massima sulle viste che abbiamo scelto.
+	\centeredImage{img/seprarated.png}{Viste su Fact Table e DT differenti}{0.6}
+\end{itemize}
+
+L'\textbf{Aggregate Navigator} è un componente che data la richiesta dell'utente:
+\begin{enumerate}
+	\item Sceglie la vista migliore tra le disponibili;
+	\item Riscrive dinamicamente la query per la vista migliore.
+\end{enumerate}
+
+\subsection{Scenari Temporali}
+Anche nelle gerarchie e quindi nelle $DT$ in realtà c'è dinamicità (slowly changing dimension), anche se non come ai livelli degli eventi. La dinamicità sulle gerarchie va comunque gestita.
+Gli scenari temporali sono i possibili scenari che l'utente può specificare quando pone un'interrogazione:
+\begin{itemize}
+	\item \textbf{Oggi per ieri (attualizzazione)}: L'idea è attualizzare tutti i da ti delle gerarchie ai dati che abbiamo oggi. Sostanzialmente ci dimentichiamo del passato dando importanza solo alla forma delle gerarchie nel presente. Per mantenere questa soluzione si mantiene un schema a stella ma si aggiunge un accorgimento sull'ETL.
+	\item \textbf{Oggi o ieri (verità storica)}: I dati vengono interpretate in base alla verità storica, ovvero alla forma che le gerarchie avevano nel momento della storia che stiamo analizzando. Implementabile sullo schema a stella aggiungendo righe alle $DT$.
+	\item \textbf{Ieri per oggi (retrodatazione)}: In un certo senso è l'opposto dell'attualizzazione, riportiamo le gerarchie ad uno stato passato. Richiede una storicizzazione dei dati e quindi l'aggiunta di colonne negli schemi.
+\end{itemize}
+\textbf{Esempio:}
+Nel seguente esempio viene rappresentata una $DT$ dei negozi.
+\centeredImage{img/esempiocambiogerarchia.png}{Esempio dell'evoluzione temporale di una gerarchia}{0.65}
+\noindent Il primo gennaio rappresenta la situazione iniziale. Il primo luglio 2011 il responsabile del negozio \textit{NonSoloPane} cambia. Il primo Novembre cambia il nome del negozio \textit{NonSoloPane} in \textit{PaneEPizza}. Il primo gennaio 2012 cambiano contemporaneamente il responsabile del negozio \textit{DiTutto} che il nome del negozio \textit{PaneEPizza}. Concentriamoci sul primo cambio. La query di interesse per l'utente è \textit{"Incassi totali per responsabile"}. Notiamo che se avessi fatto il group-by per negozio, in questo caso specifico non avrebbe avuto impatto sul risultato.
+\centeredImage{img/attualizzazionexample.png}{Esempio di attualizzazione}{0.65}
+\noindent Lanciando questa query ad Agosto, utilizzando l'attualizzazione Bianchi ne esce svantaggiato perché le vendite associate a lui nel periodo pre-luglio vengono invece associate a \textit{Rossi}. Questo accade perché tutti gli eventi di vendita vengono rapportati alle righe della $DT$ valida nel presente. Per tutti gli eventi da Luglio in poi le associazioni tra incassi e responsabili sono corrette, da prima di Luglio le associazioni che dovrebbero spettare a \textit{Bianchi} del negozio \textit{NonSoloPane} finiscono invece a \textit{Rossi}.
+\centeredImage{img/veritàexample.png}{Esempio di verità storica}{0.65}
+\noindent In questo caso ogni evento viene messo in corrispondenza con la versione di negozio che era vera in quell'istante temporale. In questo caso. Per gli eventi da Luglio in poi non cambia nulla rispetto a prima, ma gli eventi pre-Luglio vengono correttamente associati al responsabile del tempo. In questo caso specifico questa soluzione è la più corretta, ma non sempre sarà così.
+\centeredImage{img/retroexample.png}{Esempio di retrodatazione}{0.65}
+\noindent Utilizzando la retrodatazione fissiamo una data, per esempio 25 Giugno. A questo punto capiamo quali sono i record della $DT$ da considerare e associamo gli eventi a quei record.\newline\newline
+\subsection{Gerarchie Dinamiche}
+\begin{warn}[Consiglio di Rizzi]
+	Questo è un punto in cui tendiamo a fare confusione all'esame. Ogni volta che Rizzi mette domande su gerarchie temporali noi tendiamo a confondere gli scenari temporali con le soluzioni di tipo 1, 2 e 3 che vengono presentate ora. Si tratta di aspetti differenti anche se collegati tra loro. Gli scenari temporali rappresentano un desiderio dell'utente di aggregare e analizzare i dati in un certo modo in base al tempo. Queste invece sono soluzioni di progettazione ad un livello logico, qui siamo ad un livello più tecnologico.
+\end{warn}
+
+\begin{itemize}
+	\item \textbf{Gerarchia Dinamica di tipo 1}: Supportano solo lo scenario di attualizzazione. Dobbiamo essere sicuri che ai nostri utenti interessa su quel punto della gerarchia solo l'attualizzazione e questa cosa varrà anche nel futuro. La soluzione consiste nel mantenere lo schema a stella ed andare in sovrascrittura ogni volta che c'è un cambiamento nelle gerarchie. L'operazione è un UPDATE, non si aggiungono record ma il passato lo perdo per sempre.
+	\item \textbf{Gerarchia Dinamica di tipo 2}: Supporta solo e solamente la verità storica. Manteniamo lo schema a stella ma aggiungiamo righe alle $DT$. Ogni volta che cambia qualcosa in una gerarchia aggiungiamo una riga con il cambiamento che vogliamo apportare. Questo è possibile perché la chiave del $DT$ è un surrogato, e questo ci permette anche di avere possibili valori duplicati in diversi istanti temporali nel valore che desideriamo cambiare.\newline
+	Quando si progetta l'ETL dobbiamo ricordarci di associare nella Fact Table sempre il record della $DT$ più aggiornato e recente.\newline
+	Avremo ovviamente delle righe in più nelle $DT$ ed un lievissimo degrado delle prestazioni, ma l'architettura consente di far funzionare tutto subito senza dover cambiare la forma delle query.
+	\item \textbf{Gerarchia Dinamica di tipo 3}: Supportano tutti gli scenari temporali. Si tratta della soluzione più generale ma anche la più costosa. Questa soluzione si sceglie quando l'utente chiede di fare retrodatazione o quando chiede due o più scenari temporali.\newline
+	In questo caso dobbiamo aggiungere delle colonne nelle $DT$, in particolare dei timestamp per indicare l'intervallo di validità di ciascuna riga, più un ulteriore colonna che serve per mantenere il collegamento con le differenti versioni di un record.\newline
+	Il campo master è sempre necessario? No, in questo caso se fossimo sicuri che un negozio non cambierà mai nome non sarà necessario.
+	\centeredImage{img/tipo3example.png}{Esempio di istanze utilizzando soluzione di tipo 3}{0.65}
+	Come si formulano le query in questo caso?
+	\begin{itemize}
+		\item \textbf{Attualizzazione}: In base al timestamp si capisce quali sono le tuple valide, per ciascuna si individuano eventuali tuple da cui esse hanno avuto origine.
+		\item \textbf{Retrodatazione}: Si fissa prima di tutto la data, si capisce quali tuple sono valide e si procede come nel caso precedente.
+		\item \textbf{Verità Storica}: Nessuna analisi di marca temporale richiesta. Tutto funziona nel modo corretto: effettuando un join a stella otteniamo direttamente la verità storica.
+	\end{itemize}
+\end{itemize}
+
+Nella progettazione concettuale l'input è lo schema concettuale, lo scopo è ottenere in output lo schema logico relazione. I principi che useremo saranno diversi e spesso in contrasto con le classiche architetture utilizzate nei sistemi operazionali, ad esempio la ridondanza e la denormalizzazione.
+
+I passi da svolgere per la progettazione logica sono i seguenti:
+\begin{itemize}
+	\item \textbf{Scelta dello schema logico da utilizzare (star/snowflake)};
+	\item \textbf{Traduzione degli schemi concettuali} ;
+	\item \textbf{Scelta delle viste da materializzare};
+	\item \textbf{Applicazione di altre forme di ottimizzazione (frammentazione verticale/orizzontale)}.
+\end{itemize}
+
+\subsection{Star VS Snowflake}
+Esistono pareri contrastanti sull'utilità dello snowflaking.
+\begin{itemize}
+	\item La filosofia del Data Warehouse viene meno;
+	\item Lo schema viene inutilmente abbellito.
+\end{itemize}
+La scelta dipende fortemente anche dalla filosofia dei progettisti.
+\begin{warn}[Come funziona in questo corso]
+	Usare sempre e solo lo schema a stella classico, tranne in alcune circostanze in cui effettueremo snowflaking perché piuttosto vantaggioso.
+\end{warn}
+\noindent Quando può essere utile fare snoflaking:
+\begin{itemize}
+	\item Quando il rapporto tra cardinalità della dimension table primaria e secondaria è elevato. In questo caso risparmieremmo molto spazio.
+	\centeredImage{img/snowflakeexample.png}{Gerarchie con cardinalità - Quando fare snowflaking?}{0.5}
+	Senza snowflaking avremmo una unica $DT$:\newline
+	DT(id\_prodotto, prodotto, tipo, sottocategoria categoria, area)\newline
+	In questo caso occuperemmo:
+	$$100.000*(4 + 500) = 50.400.000 byte$$
+	Facendo snowflaking ne avremmo 2:\newline
+	\textit{DT1(id\_prodotto, prodotto, tipo, id\_sottocategoria:D2)}\newline
+	\textit{DT2(id\_sottocategoria, categoria, area)}\newline
+	Grandezza DT1:
+	$$100.000 * (4 + 200 byte + 4) = 20.800.000 byte$$\newline
+	Grandezza DT2:
+	$$50 * (4 + 300) = 304 * 50 = 15.200 byte$$
+	\item Quando una porzione di gerarchia è comune a più dimensioni. Questo è il caso menzionato prima in cui fare snowflaking è sempre ragionevole.
+	\centeredImage{img/gerarchiacomunesf.png}{Gerarchia comune - Quando fare snowflaking?}{0.6}
+	\item In presenza di viste aggregate. Le $DT$ secondarie della vista primaria coincide con la $DT$ primaria della vista secondaria.
+	\centeredImage{img/vistesf.png}{Viste Aggregate - Quando fare snowflaking?}{0.6}
+	\item Quando una parte di gerarchia è soggetta a frequenti aggiornamenti. Nell'esempio che segue, la $DT$ in cui ci sono i dati geografici è statica, mentre quella dei negozi per sua natura magari cambia molto frequentemente.
+	\centeredImage{img/aggiornamentisf.png}{Aggiornamenti frequenti - Quando fare snowflaking?}{0.4}
+\end{itemize}
+
+\subsection{Dagli schemi di fatto agli schemi a stella}
+La regola di base per la traduzione di uno schema di fatto in uno a stella prevede di creare una Fact Table contenente tutte le misure e gli attributi descrittivi direttamente collegati con il fatto, e per ogni gerarchia creare una $DT$ che ne contiene tutti gli attributi.\newline
+In aggiunta occorre però effettuare una trattazione approfondita dei costrutti avanzati del DFM. 
+\subsubsection{Attributi descrittivi}
+Nessun impatto significativo. Gli attributi descrittivi finiscono nella $DT$ che contiene l'attributo a cui esso è collegato. Se invece è collegato al fatto allora finisce dentro la Fact Table.
+\subsubsection{Archi opzionali}
+Nessun impatto significativo. Nella $DT$ finisce un valore fittizio (come NULL, anche se si utilizzano più spesso stringhe fittizie) nelle righe in cui non è definito alcun valore.
+\subsubsection{Gerarchie condivise}
+\begin{itemize}
+	\item Se una gerarchia si presenta più volte nello stesso fatto non è conveniente introdurre due copie ridondanti delle relative dimension table (come da immagine).
+	\centeredImage{img/gercondtostar.png}{Gerarchie condivise - Da fatto a Star}{0.6}
+	\item Se la divisione invece è ad un qualsiasi altro livello della gerarchia le scelte che possiamo compiere sono due:
+	\begin{itemize}
+		\item Effettivamente applicare uno snowflaking come nell'immagine che segue (preferibile).
+		\item Non applicare snowflaking. Nell'immagine che segue equivarrebbe a rimuovere la tabella Città ed inserire tutti gli attributi di \textit{Città} nelle tabelle \textit{Ordine} e \textit{Magazzino}.
+	\end{itemize}
+	\centeredImage{img/gercondstar.png}{Gerarchie condivise - Da gerarchia a Star}{0.6}
+\end{itemize}
+\subsubsection{Convergenza}
+Nessun impatto significativo. Tutti gli attributi che fanno parte della convergenza stanno sulla stessa $DT$ del loro padre.
+\begin{info}
+	In questo caso la presenza di un costrutto di convergenza è denotato nei metadati. Nei metadati sono infatti specificate tutte le relazioni tra gli attributi, tra cui anche il fatto che ci sono due figli legati allo stesso padre, e quindi una convergenza. Poi lo strumento quando farà i suoi roll-up e i suoi drill-down ne terrà conto.
+\end{info}
+\subsubsection{Attributi cross-dimensionali}
+Primo impatto forte sullo schema a stella. Creando un attributo cross-dimensionale inseriamo una dipendenza funzionale composta, nel caso che segue $ categoria, stato \xrightarrow{} IVA$.
+Tra categoria e stato c'è anche un legame molti a molti. Dobbiamo quindi necessariamente creare una nuova tabella nello schema a stella, che prende il nome di Bridge Table. La chiave primaria è formata dai due attributi che determinano l'attributo cross-dimensionale.
+\begin{warn}
+	I due collegamenti che si creano tra gli attributi delle $DT$ e la Bridge Table NON sono chiavi esterne. Infatti il collegamento non è con la chiave delle $DT$ ma non alcuni suoi componenti.
+\end{warn}
+\centeredImage{img/crosssf.png}{Attributi Cross Dimensionali e Snowflaking}{0.6}
+Se volessimo a tutti i costi una foreign key dovremmo fare snowflaking:\newline\newline
+IVA(id\_stato: STATO, id\_categoria, iva)\newline
+NEGOZI(id\_negozio, negozio, città, id\_stato: STATO)\newline
+STATO(id\_stato, stato)\newline
+\subsubsection{Archi multipli}
+Anche in questo caso aggiungiamo una Bridge Table. ANche in questo caso la chiave della tabella Bridge è la composizione degli attributi collegati all'arco multiplo.\newline
+In questo caso però i due attributi sono anche chiavi esterne. Per non perdere la sommarizzabilità, abbiamo anche bisogno di inserire il peso all'interno della Bridge.
+\centeredImage{img/archimultiplistar.png}{Archi multipli - Progettazione Logica}{0.6}
+\centeredImage{img/istranzearcomultiplologico.png}{Archi multipli - Progettazione Logica - Esempio di istanze}{0.6}
+A causa dell'aggiunta della Bridge Table dovremo pagare dei Join in più. Questa soluzione rende possibili due tipi di interrogazioni:
+\begin{itemize}
+	\item \textbf{Interrogazioni pesate}: considerano il peso dell'arco multiplo e forniscono pertanto l'effettivo totale. Ha senso nel cao in cui per esempio dobbiamo calcolare gli incassi.
+	\item \textbf{Interrogazioni con impatto}: non considerano il peso, forniscono quindi valori più elevati.
+\end{itemize}
+Nel caso in cui si voglia mantenere lo schema a stella pulito è necessario rendere più fine la granularità del fatto, modellando l'arco multiplo direttamente nella Fact Table (operazione di push-down).
+\centeredImage{img/multiploproblem.png}{Archi multipli - Progettazione Logica - Soluzione push-down}{0.45}
+Il problema di questa soluzione è che per ogni accoppiata libro-autore viene creata una nuova riga nella Fact Table, con conseguente spreco di spazio. Inoltre l'attributo di pesatura sparisce in quanto i dati vengono inseriti già blindando la regola di pesatura nei dati, rendendo molto difficile formulare interrogazioni.\newline
+Questa soluzione quindi non viene praticamente mai usata in quanto è poco corretta.
+\subsubsection{Dimensioni degeneri}
+Indica una dimensione la cui gerarchia contiene un solo attributo. Se la lunghezza dell'attributo non è particolarmente eccessiva si può valutare di inserire il valore direttamente in Fact Table. Prendiamo in considerazione il DFM che segue:
+\centeredImage{img/degeneridfm.png}{Dimensioni degeneri - DFM di esempio}{0.45} 
+\noindent In questo caso si potrebbe optare per una soluzione classica, adottando tre $DT$:\newline\newline
+DTCR(\underline{id\_codice\_ritorno}, codice\_ritorno);\newline
+DTMS(\underline{id\_modalità\_spedizione}, modalità\_spedizione);\newline
+DTSLO(\underline{id\_stato\_linea\_ordine}, stato\_linea\_ordine);\newline
+FT(\underline{id\_codice\_ritorno}, \underline{id\_modalità\_spedizione}, \underline{id\_stato\_linea\_ordine}, ..., quantità, importo);\newline\newline
+Questa soluzione è tecnicamente corretta ma per lanciare una qualsiasi query che ha bisogno di quei campi sono necessari almeno tre join per recuperare tre miseri campi. Una soluzione alternativa è inserire i campi direttamente nella Fact Table:\newline\newline
+FT(\underline{codice\_ritorno}, \underline{modalità\_spedizione}, \underline{stato\_linea\_ordine}, ..., quantità, importo);\newline
+Il difetto di questa soluzione è che la Fact Table occuperà più spazio e alcuni dati saranno ridondanti.\newline
+Esiste però una soluzione intermedia, ovvero quella di utilizzare una Junk Dimension, ovvero una unica tabella per tutte le dimension degeneri.
+\centeredImage{img/junkdimension.png}{Junk Dimension}{0.45}
+Utilizzando questa soluzione manteniamo tutte le dimensioni degeneri all'interno di un unica tabella, risparmiando sul numero di join da effettuare. Anche dal punto di vista dello spazio sulla Fact Table risparmiamo molti record. Lo svantaggio di questa soluzione è che all'interno della Junk Dimension finiscono attributi che sono tra loro in associazioni molti a molti, quindi potrebbe esserci una forte occupazione di spazio sulla $DT$, dovuta a tutte le possibili combinazioni di valori possibili. Questa soluzione resta molto interessante, ma bisognerebbe utilizzarla solo quando le cardinalità delle dimensioni degeneri non sono troppe elevate perché la cardinalità della tabella cresce esponenzialmente, o quando le regole di business impediscono moltissime combinazioni degli attributi. Inoltre c'è un ulteriore livello di flessibilità, perché può essere che alcuni record sulla Junk siano utilizzato molto più spesso di altri.
+\subsubsection{Gerarchie incomplete}
+Dal punto di vista dello schema non ci sono variazioni, si mantiene uno schema a stella, ma bisogna trovare un modo per gestire in buchi. Ci sono diversi modi ma nessuno funziona meglio degli altri.
+\begin{itemize}
+	\item \textbf{Bilanciamento per esclusione}: Ogni volta che c'è un buco viene inserito un segnaposto ("altro", "non definito", etc.).
+	\centeredImage{img/bilanciamentoperesclusione.png}{Bilanciamento per Esclusione}{0.55}
+	\textbf{PRO}:
+	\begin{itemize}
+		\item Buono quando il numero di dati mancanti è elevato.
+	\end{itemize}
+	\textbf{CONTRO}:
+	\begin{itemize}
+		\item Viola la semantica di roll-up. Facendo un roll-up da regione a nazione partendo ad esempio dai soli dati \textit{Toscana} e \textit{Altro} in cui aggregando ci ritroviamo con più valori di quelli da cui siamo partiti, ad esempio \textit{Italia}, \textit{Città del Vaticano} e \textit{Repubblica di S. Marino}.
+	\end{itemize}
+	\item \textbf{Bilanciamento verso il basso}: i valori mancanti vengono rimpiazzati con il valore dell'attributo che lo precede nella gerarchia.
+	\centeredImage{img/bilanciamentoversobasso.png}{Bilanciamento verso il basso}{0.55} 
+	\textbf{PRO}:
+	\begin{itemize}
+		\item Buono quando il numero di dati mancanti è limitato.
+	\end{itemize}
+	\textbf{CONTRO}:
+	\begin{itemize}
+		\item L'interpretazione dei report è complicata perché alcuni dati finiscono nel livello di aggregazione sbagliato, portando a confusione e inesattezze.
+	\end{itemize}
+	\item \textbf{Bilanciamento verso l'alto}: i valori mancanti vengono rimpiazzati con i valori dell'attributo che lo segue nella gerarchia.
+	\centeredImage{img/bilanciamentoversolalto.png}{Bilanciamento verso l'alto}{0.55} 
+	\textbf{PRO}:
+	\begin{itemize}
+		\item Buono quando il numero di dati mancanti è elevato.
+	\end{itemize}
+	\textbf{CONTRO}:
+	\begin{itemize}
+		\item L'interpretazione dei report resta complicata. I report però risultano più leggibili perché presentano un numero inferiore di valori.
+	\end{itemize}
+\end{itemize}
+In genere sono gli utenti a sapere come vogliono visualizzare i dati e scelgono le soluzioni in base ai loro requisiti.
+\subsubsection{Gerarchie ricorsive}
+\centeredImage{img/ricorsivalogica.png}{Gerarchia Ricorsiva - Progettazione Logica}{0.75}
+Non può essere modellata attraverso uno schema a stella.
+Una possibile soluzione prevede l'utilizzo di autoanello, ovvero una specie di associazione padre figlio in cui un campo è foreign key della tabella stessa.\newline
+Il problema nasce dal fatto che SQL non è un linguaggio ricorsivo, quindi non sempre la soluzione è gestibile in modo ottimale con DBMS commerciali. In pratica le interrogazioni sono estremamente difficili se non impossibili da scrivere.\newline
+Un costrutto più potente è dato dalla \textit{Navigation Table}
+\centeredImage{img/navigationtable.png}{Gerarchia Ricorsiva - Progettazione Logica - Navigation Table}{0.75}
+In questo caso l'albero delle dipendenze viene appiattito in una tabella. In questo modo non ci sarà più il problema della ricorsive da gestire, ma ci sarà invece un problema di spazio, infatti la gerarchia richiede un numero di righe esponenziali rispetto al numero di nodi.\newline
+Servono infatti molti attributi per specificare a che livello si trova un determinato dato, se è foglia o no, e quali dipendenze ha con altri nodi.
+
+\subsection{Scelta delle viste}
+La scelta delle viste da materializzare non è semplice e richiede un trade-off tra numerosi requisiti:
+\begin{itemize}
+	\item Minimizzazione di funzioni di costo
+	\item Vincoli di sistema
+	\begin{itemize}
+		\item Spazio su disco
+		\item Tempo a disposizione per l'aggiornamento dei dati
+	\end{itemize}
+	\item Vincoli utente
+	\begin{itemize}
+		\item Tempo massimo di risposta
+		\item Freschezza dei dati
+	\end{itemize}
+\end{itemize}
+La scelta delle viste è un problema NP-HARD. Immaginiamo di voler coprire q1, q2 e q3. Vorremmo materializzare le viste che portano alla massimizzazione dei benefici prestazionali e di spazio. Quali viste conviene materializzare?
+\centeredImage{img/sceltaviste.png}{Scelta delle viste da materializzare}{0.45}
+Iniziamo dal dire che esistono viste che non ha proprio senso materializzare, ad esempio il figlio di q1 e q2.\newline
+Il nostro scopo inziale è scoprire quali sono le viste candidate, ovvero tutte quelle che può aver senso scegliere.\newline
+Nell'esempio le viste candidate sono quelle gialle, più il nodo centrale e il padre di q3. Tutte le altre sono da scartare perché meno efficienti di altre già scelte.\newline
+Una vista candidata è quindi la vista più bassa che permette di coprire nel modo migliore ciascuno sottoinsieme delle query del carico di lavoro.\newline
+In termini qualitativi in questo caso conviene materializzare q3 e q1. Nella realtà la scelta delle viste è ancora oggi argomento di ricerca, ma di solito su utilizza un approccio greedy.
+Per esempio non conviene materializzare una vista quando:
+\begin{itemize}
+	\item Il suo group-by-set è molto simile a quello di una vista già materializzata;
+	\item Il suo group-by-set è molto fine
+	\item La materializzazione non riduce di almeno un ordine di grandezza il costo delle interrogazioni
+\end{itemize}
+\subsection{Frammentazione delle viste}
+Si intende la suddivisione della Fact Table in più frammenti al fine di aumentare le prestazioni del sistema.
+Ci sono due modi per frammentare una tabella:
+\begin{itemize}
+	\item \textbf{Frammentazione orizzontale}: La tabella viene divisa in una o più tabelle smistando le righe. Per esempio si può frammentare una tabella di dipendenti in due tabelle in cui in una ci sono dipendenti di sesso maschile e nell'altra di sesso femminile.
+	\item \textbf{Frammentazione verticale}: La tabella viene divisa in due o più parti ma sulle colonne, mantenendo quindi le stesse righe su più tabelle. Per esempio sulla tabella dei dipendenti si possono creare due parti, una più dedicata ai dati anagrafici e l'altra per tutto il resto. Per poter avere la ricostruibilità è necessario replicare la chiave in entrambe le parti.
+\end{itemize}
+Questo accade nei DB operazionali, nella Fact Table si utilizza praticamente solo la frammentazione orizzontale, sfruttando per esempio la divisione per anni o comunque una divisione temporale. Questo rende più facile anche la manutenzione e favorisce la programmazione dell'ETL, perché avendo più Fact Table si sa esattamente in quale andare a lavorare.
+
+\newpage

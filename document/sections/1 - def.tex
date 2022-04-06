@@ -1,0 +1,53 @@
+\section{Definizioni Generali}
+
+\begin{itemize}
+	\item \textbf{Data Warehouse}: Una collezione di dati di supporto per il processo decisionale. Un raccoglitore di informazioni che pulisce ed organizza i dati provenienti da più sorgenti. Ha le seguenti caratteristiche:
+	\begin{itemize}
+		\item \textit{Orientato ai soggetti}: I soggetti sono i protagonisti del business, ovvero i concetti principali di interesse. Se esistono più basi di dati è probabile che le istanze di un determinato studente siano differenti. Quel che desideriamo all'interno del data warehouse è una versione unica consistente e completa del dato. 
+		\item \textit{Integrato e consistente}: Esistono ovviamente diverse sorgenti da cui i dati vengono importati. Il dato finale viene inserito nel data warehouse solo dopo un processo di pulizia, filtraggio e diverse trasformazioni.
+		\item \textit{Rappresentativo dell'evoluzione temporale}: Nei processi di analisi il confronto temporale è fondamentale. Il data warehouse deve mantenere delle fotografie dello stato dei dati, in modo da poter fare confronti col passato e trarre informazioni vantaggiose per il business.
+		\item \textit{Non volatile}: I dati sono tutti importanti, non si butta via niente, al massimo si aggiunge.
+	\end{itemize}
+	Un data warehouse è appositamente denormalizzato. Alcune forme normali vengono cioè appositamente non rispettate.
+	\item \textbf{Operazione OLTP}: un'operazione (query) in lettura o scrittura. Spesso la logica è congelata all'interno delle applicazioni. Queste query vengono spesso utilizzate al livello operativo dell'azienda e sono solitamente legate ad operazioni abitudinarie.
+	\item \textbf{Operazione OLAP}: un'operazione in cui un'enorme quantità di dati vengono elaborati ma ci sono solo pochi indicatori in output. Non vengono lanciate sui DB operazionali. Solitamente sono in sola lettura.
+	\item \textbf{Data Warehousing}: Il processo per condurre analisi sui dati e trasformarli in conoscenza.
+	\item \textbf{Data Mart}: Un sottoinsieme o un'aggregazione di dati presenti nel Data Warehouse. Contiene info rilevanti per una determinata area di business. Sono logicamente distinti, non necessariamente fisicamente distinti. Un Data Warehouse è un insieme di Data Mart. In questo caso i Data Mart sono dipendenti tra loro. La loro utilità risiede nel solito principio del Divide et Impera, una maggior divisione rende più semplice lo sviluppo, la manutenzione e la documentazione. Essendo di dimensioni inferiori al Data Warehouse primario inoltre permettono di raggiungere prestazioni migliori. In alcuni casi non esiste un Data Warehouse e i Data Mart sono logicamente sconnessi tra loro. In questo caso i Data Mart sono indipendenti tra loro. L’assenza di un DW primario snellisce le fasi progettuali, ma determina uno schema complesso di accessi ai dati e ingenera il rischio di inconsistenze tra i Data Mart.
+	\item \textbf{Operational Data Store (ODS)}: Anche denominato Database Riconciliato, si tratta di una base di dati intermedia alle sorgenti operazionali e al Data Warehouse in cui i dati sono riconciliati, puliti e normalizzati rispetto alle sorgenti. Si tratt di un Database normalizato, che rispetta quindi le forme normali a differenza del Data Warehouse. Viene utilizzato nell'architettura a tre livelli.
+	\begin{warn}[Nota:]
+		Alcune aziende utilizzano una nomenclatura diversa e chiamano l'ODS Data Warehouse. Per levare ogni dubbio basta chiedere se il Database è normalizzato o no, se lo è allora è quello che qui viene riportato come ODS, se non lo è allora è quello che qui viene riportato come Data Warehouse. Se lo è un po' sì un po' no è un aborto (parole di Rizzi).
+	\end{warn}
+	\item \textbf{Reportistica Operativa}: Tutte le operazioni atte a creare report operativi sempre consistenti e al massimo livello di dettaglio possibile. Queste operazioni vengono invocate sull'ODS proprio perché il database essendo riconciliato possiede il dato nella sua forma più normalizzata e consistente possibile.
+	\item \textbf{Staging Area}: Un'area di lavoto utilizzata dall'ETL per parcheggiare i dati che poi finiranno sul Data Warehouse. Si può vedere una specie di parallelismo con una cache. Non si tratta di una base dati. Spesso la Staging Area è erroneamente confusa con l’ODS.
+	\item \textbf{ETL (Extraction, Trasformation, Loading)}: Gli strumenti che alimentano una sorgente singola dettagliata esauriente e di alta qualità che possa alimentare a sua volta il Data Warehouse. In realtà ci sono quattro fasi e non tre come si intende dal nome:
+	\begin{itemize}
+		\item \textit{Estrazione}: I dati vengono estratti dalle sorgenti, ci sono due diversi tipo di estrazione:
+		\begin{itemize}
+			\item Statica: la prima volta che il DW viene popolato vengono inseriti tutti i dai operazionali.
+			\item Dinamica: Viene utilizzata ogni volta che vengono aggiornati i dati. a differenza dell'estrazione statica viene utilizzata periodicamente e cattura solo i cambiamenti che sono avvenuti rispetto all'ultima volta. La complessità di implementazione è maggiore.
+		\end{itemize}
+		\item \textit{Pulitura}: L'obiettivo è aumentare la qualità dei dati, rimuovendo errori, duplicazioni, inconsistenze, dati mancanti, uso non previsti dei campi, valori impossibili o inconsistenti. Un buon ETL identifica gli errori e li corregge, alcuni però non sono per forza correggibili automaticamente, alcuni vengono solo segnalati all'amministratore del sistema.
+		\item \textit{Trasformazione}: Lavora sul formato del dato. Anche se l'operazione sembra simile alla pulitura non è così. In questo caso non ci sono errori nel dato ma solo nelle convenzioni usate per rappresentarlo, per esempio nelle diversi sorgenti la sigla che rappresenta l'Italia è diversa (I, IT, ITA, It, etc..). Il dato viene quindi trasformato e standardizzato.\newline
+		Ci sono due "tranche":
+		\begin{itemize}
+			\item L'alimentazione dei dati riconciliati:
+			\begin{itemize}
+				\item Conversione e normalizzazione: opera sul formato del dato, lo scopo è standardizzare.
+				\item Matching: si cercano i campi tra i diversi DB sorgenti che corrispondono tra loro.
+				\item Selezione: si riduce il numero di campi rispetto alle sorgenti.
+			\end{itemize}
+			\item L'alimentazione del Data Warehouse:
+			\begin{itemize}
+				\item La normalizzazione è sostituita dalla denormalizzazione.
+				\item Si introduce l'aggregazione.
+			\end{itemize}
+		\end{itemize}
+		\item \textit{Caricamento}: Il caricamento dei dati su Data Warehouse può essere di due tipi:
+		\begin{itemize}
+			\item Refresh: I dati vengono riscritti integralmente (utilizzata solo per popolare inizialmente il Data Warehouse).
+			\item Update: Vengono aggiunti solo i cambiamenti occorsi dei dati sorgenti (tecnica utilizzata per l'aggiornamento periodico del Data Warehouse).
+		\end{itemize}
+	\end{itemize}
+\end{itemize}
+
+\newpage

@@ -1,0 +1,63 @@
+
+\section{Recap rapido sul modello relazione (fuori programma)}
+\subsection{Definizioni}
+\begin{itemize}
+	\item \textbf{Relazione}: Un sottoinsieme del prodotto cartesiano tra i domini di un insieme di attributi. Una buona intuizione è pensare alla relazione come una tabella.
+	\item \textbf{Tupla}: La singola riga di una relazione.
+	\item \textbf{Cardinalità}: Il numero di righe di una relazione.
+	\item \textbf{Schema}: un insieme di schemi di relazioni con nomi distinti.
+	\item \textbf{Database}: Un insieme di relazioni con nomi distinti.
+\end{itemize}
+\subsection{Forme Normali}
+\begin{itemize}
+	\item \textbf{Prima forma normale}: Ogni attributo deve essere atomico, quindi non strutturato. (alcune eccezioni sono date e stringhe).
+	\item \textbf{Seconda forma normale}: Non esistono dipendenze funzionali parziali.
+	\item \textbf{Terza forma normale}: Non esistono dipendenze funzionali transitive.
+\end{itemize}
+
+\subsection{NULL}
+Il valore utilizzato per il valore mancante è il NULL. Il NULL ha alcune proprietà, per esempio NULL != NULL. Esistono però restrizioni che impongono la presenza del dato, che deve essere quindi NOT NULL.
+
+\subsection{Vincolo di integrità}
+Si tratta di una proprietà che deve essere soddisfatta per ogni possibile istanza. Ogni vincolo può essere descritto come una funzione booleana che associa il valore dell'istanza VERO o FALSO.
+\begin{itemize}
+	\item \textbf{Vincolo di dominio}: vincolo che si riferisce al valore ammissibile di un singolo attributo (es. il voto può essere solo un numero tra 18 e 30);
+	\item \textbf{Vincolo di tupla}: Simile al vincolo di dominio ma si può prendere in considerazione l'intera tupla (es: il voto 26 e lode non è valido);
+	\item \textbf{Vincolo di chiave}: è vietata la presenza di tuple distinte che hanno lo stesso valore su uno o più attributi.
+	\item \textbf{Vincolo di integrità referenziale}: I vicnoli illustrati fino ad ora sono intra-relazione, ossia si considera una relazione alla volta. In questo vincolo si considera più di una relazione (inter-relazione). Il vincolo è letteralmente la definizione di Foreign Key.
+\end{itemize}
+
+\subsection{Chiavi e Superchiavi}
+Per definire una chiave è prima necessario definire una superchiave.
+\begin{itemize}
+	\item \textbf{Superchiave}: Insieme di attributi di una relazione i cui valori non vengono mai duplicati in due righe della relazione. Non possono quindi esistere due istanze che hanno gli stessi valori sugli attributi coperti dalla superchiave.
+	\item \textbf{Chiave}: Superchiave minimale, ovvero che usa il minor numero di attributi possibili.
+	\item \textbf{Foreign Key (chiave esterna)}: Un'attributo i cui valori leciti sono un sottoinsieme dei valori che assume la chiave primaria di un'altra relazione, oppure NULL.
+\end{itemize}
+Per ogni relazione deve esistere per forza una chiave. Una relazione è infatti un insieme di tuple. Se è un insieme allora per forza non possono esserci elementi duplicati. Se non esistono elementi duplicati allora non esistono due tuple identiche. C'è sempre quindi almeno una superchiave, e quindi esiste sempre almeno una chiave.\newline La \textbf{Chiave Primaria} è una chiave su cui esiste il vincolo di NOT NULL.\newline
+Possono esistere situazioni in cui non è possibile garantire che nelle chiavi non ci siano dei NULL (anche a causa del dominio applicativo). In questo caso si utilizza una \textit{chiave surrogata} ovvero un numero incrementale generato dal DBMS che è necessariamente chiave perché essendo solo incrementale non possono esistere istanze con lo stesso numero.
+
+\subsection{Dipendenze funzionali}
+A $ \xrightarrow{} $ B significa A determina B, o B dipende da A.\newline\newline
+CF $ \xrightarrow{} $ Nome, Cognome, Data nascita, Sesso ? SI\newline
+Nome, Cognome, Data nascita, Sesso $ \xrightarrow{} $ CF ? NO\newline\newline
+Qualche esempio per le forme normali:\newline\newline
+FORTNITURA(\underline{codFornitore}, \underline{codParte}, indirizzoFOrnitore, coloreParte, quantitàFornita)\newline\newline
+In questo caso:\newline
+codFornitore, codParte $ \xrightarrow{} $ indirizzoFornitore\newline
+codFornitore, codParte $ \xrightarrow{} $ coloreParte\newline
+codFornitore, codParte $ \xrightarrow{} $ quantitàFornita\newline
+\newline
+Ma ci sono anche dipendenze funzionali parziali:\newline
+codFornitore $ \xrightarrow{} $ indirizzoFornitore\newline
+codParte $ \xrightarrow{} $ coloreParte\newline\newline
+Una relazione che ha dipendenze funzionali parziali è in seconda forma normale. Per normalizzare questa relazione è necessario spezzarla, per questa in particolare servono 3 relazioni, FORNITORI, PARTI e FORNITURE.\newline\newline
+CARTACREDITO(\underline{numCarta}, circuito, CFIntestatario, cognomeIntestatario)\newline\newline
+numCarta $ \xrightarrow{} $ circuito\newline
+numCarta $ \xrightarrow{} $ CFIntestatario\newline
+numCarta $ \xrightarrow{} $ cognomeIntestatario\newline\newline
+Ma c'è anche una dipendenza transitiva:\newline
+CFIntestatario $ \xrightarrow{} $ cognomeIntestatario\newline\newline
+Quindi la relazione non è in terza forma normale. Per normalizzare bisogna creare la nuova relazione per l'INTESTATARIO.
+
+\newpage

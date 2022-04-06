@@ -1,0 +1,51 @@
+\section{Ciclo di vita di un Data Warehouse}
+Esistono numerosi fattori di rischio che possono portare al fallimento o ad un risultato non soddisfacente nei progetti di data warehousing.
+\begin{itemize}
+	\item Rischi legati alla gestione del progetto;
+	\item Rischi legati alle tecnologie;
+	\item Rischi legati ai dati ed alla progettazione;
+	\item Rischi legati all'organizzazione.
+\end{itemize}
+Esistono due tipi di approccio per la realizzazione di un Data Warehouse:
+\begin{itemize}
+	\item \textbf{Approccio top-down}: Pensare, pianificare e realizzare il Data warehouse nella sua interezza, cioè a partire dall'analisi fatta sui requisiti dell'intera azienda.\newline\newline
+	\textit{PRO}:
+	\begin{itemize}
+		\item I risultati sono spesso ottimi in quanto lo scope è tutta l'azienda. Il Data Warehouse risulterà consistente ed integrato.
+	\end{itemize}
+	\textit{CONTRO}:
+	\begin{itemize}
+		\item Costi notevoli.
+		\item Analisi e riconciliazioni si tutte le sorgenti è un lavoro estremamente complesso.
+		\item La fase di analisi deve essere portata avanti con tutte le aree aziendali, lavoro estremamente lungo e complesso.
+		\item Impossibile riconoscere a priori i problemi di ogni area aziendale, il processo di analisi rischia la paralisi.
+		\item Impossibilità di creare prototipi che possano far capire l'utilità del sistema, gli utenti rischiano di perdere fiducia nel progetto.
+	\end{itemize}
+	L'approccio Top Down in questo campo non viene più seguito in quanto porta spesso a fallimenti. Il rischio è troppo elevato rispetto ai benefici ottenuti.
+	\item \textbf{Approccio bottom-up}: La costruzione del Data Warehouse avviene in maniera incrementale, un Data Mart alla volta. Si lavora a cicli di iterazione, dove ad ogni ciclo si progetterà e si creerà un singolo Data Mart. Il Data Warehouse sarà l'unione di tutti i Data Mart.
+	\textit{PRO}:
+	\begin{itemize}
+		\item Si ottengono risultati concreti in breve tempo.
+		\item Costi meno elevati;
+		\item Semplicità di realizzazione del singolo Data Mart. Focalizzazione sul singolo problema in esame;
+		\item La dirigenza riconosce in fretta l'utilità del progetto, avendo a disposizione risultati in breve tempo;
+		\item L'attenzione sul progetto è costante.
+	\end{itemize}
+	\textit{CONTRO}:
+	\begin{itemize}
+		\item Si rischia di perdere di vista i bisogni globali dell'azienda, focalizzando la visione solo su domini di interesse parziali.
+	\end{itemize}
+	Il contro è possibilmente affrontabile effettuando un'analisi iniziale di tipo top down, in un certo senso applicando un approccio ibrido. Una volta definiti i bisogni collettivi è possibile utilizzare l'approccio bottom-up, ma in questo modo si avrà una maggiore visione d'insieme.
+\end{itemize}
+
+Il primo Data Mart da prototipare deve essere quello più strategico per l'azienda, sarà utile anche in una fase futura, in qualche avrà un ruolo centrale e di riferimento per l'intero Data Warehouse, e si deve appoggiare su fondi dati già disponibili e consistenti.
+
+\subsection{Il ciclo di Sviluppo}
+
+\begin{enumerate}
+	\item \textit{Definizione degli obiettivi e pianificazione}: studi delle competenze, dei gruppi di lavoro, analisi dei rischi e delle aspettative, valutazioni dei costi e del valore aggiunto, scelta dell'approccio, definizione dell'architettura, stima delle dimensioni. (FASE TOP-DOWN)
+	\item \textit{Progettazione dell'infrastruttura}: Si analizzano le possibili soluzioni tecnologiche adottabili, si realizza un progetto di massima. (FASE TOP-DOWN)
+	\item \textit{Progettazione e sviluppo dei Data Mart}: Ogni iterazione comporta la creazione di un nuovo Data Mart e di nuove applicazioni, che vengono a mano a mano integrata nel Data Warehouse. (FASE BOTTOM-UP)
+\end{enumerate}
+
+\newpage
