@@ -65,7 +65,7 @@ Le dipendenze funzionali sono di due tipi:
 		\caption{Esempio E/R: Vendite}
 	\end{center}
 \end{figure}
-\noindent Applicando l'algoritmo di arriva ad un risultatp simile. In questo caso città è già stato accomunato come concetto utilizzando la gerachia condivisa. Il ragionamento fatto per capire se si trattasse di gerarchia condivisa oppure convergenza è stato:
+\noindent Applicando l'algoritmo di arriva ad un risultato simile. In questo caso città è già stato accomunato come concetto utilizzando la gerarchia condivisa. Il ragionamento fatto per capire se si trattasse di gerarchia condivisa oppure convergenza è stato:
 \textit{"La città in cui è stato emesso lo scontrino, è anche la stessa in cui viene prodotta la marca dei prodotti acquistati?"}
 Essendo la risposta NO non abbiamo vincoli sulle istanze e quindi si tratta di gerarchia condivisa.
 \begin{figure}[H]
@@ -85,6 +85,9 @@ Essendo la risposta NO non abbiamo vincoli sulle istanze e quindi si tratta di g
 	Da questo algoritmo non traspaiono archi multipli(dovremmo navigare dove ci sono porte chiuse) o attributi cross-dimensionali. L'idea è avere un algoritmo semplice, e aggiungere a posteriori costrutti più complessi solo se i requisiti lo richiedono.
 \end{warn}
 \subsection{Problemi in progettazione concettuale}
+\subsubsection{Attributo su relazione}
+Nel caso in cui con l'algoritmo finiamo su una relazione con un attributo come nel caso in immagine, bisogna ragionare a dipendenze funzionali. In questo caso la gravità viene attaccata a Somministrazione, perché è da essa che dipende. Questo avviene perché la relazione è di tipo 1-N quindi abbiamo istanze formate da coppie di Somministrazione e Patologia. Per ognuna ho anche una gravità, quindi ho anche delle triple. Però essendo l'associazione 1-N compare una volta sola la patologia per ogni somministrazione, quindi somministrazione $\xrightarrow{}$ gravità.
+\centeredImage{img/attributeonrel.png}{Attributo su relazione}{0.6}
 \subsubsection{Cicli}
 \begin{figure}[H]
 	\begin{center}
