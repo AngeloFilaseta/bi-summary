@@ -125,6 +125,9 @@ La soluzione che ci interessa è l'ultima perché mantiene al meglio l'informazi
 		\caption{Conversione E/R da gerarchia ad associazioni}
 	\end{center}
 \end{figure}
+\begin{warn}
+	Navigando verso l'alto non c'è opzionalità, quindi non bisogna, utilizzando l'algoritmo utilizzare il costrutto di arco multiplo. Quello che sicuramente ci sarà sarà una gerarchia condivisa o una convergenza. Gli archi che nel DFM però sono archi 1-1 e quindi andranno gestiti in qualche modo.
+\end{warn}
 \subsubsection{Associazioni n-arie}
 Anche se le associazioni n-arie sono per noi porte chiuse esistono i casi delle false n-arie. In questo caso lo schema è rappresentato in modo sbagliato, perché quell'associazione si può rappresentare come due relazioni.
 \begin{figure}[H]
