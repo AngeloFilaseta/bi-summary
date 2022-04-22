@@ -6,7 +6,7 @@ Siamo partiti in modo incrementale, iniziando con un semplice flusso che evolver
 	\item \textbf{Flusso semplice - Pulizia}: \begin{itemize}
 		\item Si parte dalla tabella sorgente;
 		\item Si crea un'operazione di pulizia, che rimuove i campi inutili e rinomina quelli presenti, magari rimuovendo eventuali prefissi;
-		\item Carica i dati sulla tabella destinazione. 
+		\item Carica i dati sulla tabella destinazione.
 	\end{itemize}
 	\centeredImage{img/mod2/labetl1.png}{Flusso ETL - Flusso semplice}{0.5}
 	Ma mancano ancora dei passi, i dati vengono sempre riscritti da capo, non c'è nessuna differenza tra il modo in cui vengono trattati i dati vecchi e i dati nuovi. Inoltre manca ancora l'aggiunta di chiavi surrogate.
@@ -29,7 +29,7 @@ Siamo partiti in modo incrementale, iniziando con un semplice flusso che evolver
 	\item \textbf{Flusso con alimentazione incrementale semplificata}:
 	Una soluzione identica a quella sopra riportata ma che utilizza meno join è la seguente.
 	\centeredImage{img/mod2/labetl3.png}{Flusso ETL - Alimentazione incrementale - Soluzione Semplificata}{0.6}
-	In questo caso si effettua un full outer join. Otterremo una tabella che contiene tutti i dati ma NULL in corrispondenza dei campi mancanti. Nel passo di pulizia poi attraverso l'opzione \textit{Campo Calcolato} si può creare un campo attraverso uno script, per esempio, per inserire il campo \textit{size} la regola da utilizzare è: 
+	In questo caso si effettua un full outer join. Otterremo una tabella che contiene tutti i dati ma NULL in corrispondenza dei campi mancanti. Nel passo di pulizia poi attraverso l'opzione \textit{Campo Calcolato} si può creare un campo attraverso uno script, per esempio, per inserire il campo \textit{size} la regola da utilizzare è:
 	\begin{verbatim}
 		IF(ISNULL([size])) THEN [dt_size] ELSE [size] END
 	\end{verbatim}

@@ -29,7 +29,7 @@ Nella fact table ci sono tante foreign key, ognuna importata dalle diverse dimen
 	La prima forma normale è rispettata perché non esistono attributi non atomici, la seconda è rispettata perché le chiavi non sono composte, e quindi a prescindere non possono esistere dipendenze parziali.
 \end{info}
 Ma allora perché si dovrebbe denormalizzare? Per diminuire il numero di Join. Infatti gli unici join possibili in questo modo sono quelli tra la fact table e le $DT$. Il motivo è quindi puramente prestazionale. Il contro, come in ogni caso in cui c'è denormalizzazione è la presenza di ridondanza. Nel caso dell'esempio sopra, nella $DT$ negozi Pesaro può comparire più volte in Italia.
-Inoltre non abbiamo problemi di sparsità perché i record vengono registrati solo se un evento accade. 
+Inoltre non abbiamo problemi di sparsità perché i record vengono registrati solo se un evento accade.
 \begin{warn}
 	Normalmente ci sarebbe anche un problema di inconsistenze. Il problema in ambito Data Mart però non ci tocca, perché l'ETL garantisce che le inconsistenze non ci siano.
 \end{warn}
@@ -60,7 +60,7 @@ Le viste sono tante quanti sono i group-by-set.
 \centeredImage{img/viste2.png}{Reticolo multidimensionale - tutte le possibili viste}{0.7}
 \noindent La vista più in alto in questo reticolo multidimensionale rappresenta il livello più fine possibile, ovvero l'insieme delle dimensioni, mentre nell'ultimo ho sempre il group-by vuoto, in mezzo ho tutti gli altri.\newline
 \begin{warn}
-	Nei compiti può capitare che venga richiesto di disegnare un reticolo multidimensionale. 
+	Nei compiti può capitare che venga richiesto di disegnare un reticolo multidimensionale.
 \end{warn}
 Se decido di materializzare una vista, posso lanciare query sulla tabella relativa a quella stessa vista, ma posso anche partire da quella per arrivare a tutte le viste che stanno sotto, effettuando qualche passo di aggregazione in più.\newline
 L'utilità del reticolo permette infatti di vedere per quali group-by è utilizzabile una vista.\newline
@@ -198,7 +198,7 @@ La scelta dipende fortemente anche dalla filosofia dei progettisti.
 
 \subsection{Dagli schemi di fatto agli schemi a stella}
 La regola di base per la traduzione di uno schema di fatto in uno a stella prevede di creare una Fact Table contenente tutte le misure e gli attributi descrittivi direttamente collegati con il fatto, e per ogni gerarchia creare una $DT$ che ne contiene tutti gli attributi.\newline
-In aggiunta occorre però effettuare una trattazione approfondita dei costrutti avanzati del DFM. 
+In aggiunta occorre però effettuare una trattazione approfondita dei costrutti avanzati del DFM.
 \subsubsection{Attributi descrittivi}
 Nessun impatto significativo. Gli attributi descrittivi finiscono nella $DT$ che contiene l'attributo a cui esso è collegato. Se invece è collegato al fatto allora finisce dentro la Fact Table.
 \subsubsection{Archi opzionali}
@@ -246,7 +246,7 @@ Il problema di questa soluzione è che per ogni accoppiata libro-autore viene cr
 Questa soluzione quindi non viene praticamente mai usata in quanto è poco corretta.
 \subsubsection{Dimensioni degeneri}
 Indica una dimensione la cui gerarchia contiene un solo attributo. Se la lunghezza dell'attributo non è particolarmente eccessiva si può valutare di inserire il valore direttamente in Fact Table. Prendiamo in considerazione il DFM che segue:
-\centeredImage{img/degeneridfm.png}{Dimensioni degeneri - DFM di esempio}{0.45} 
+\centeredImage{img/degeneridfm.png}{Dimensioni degeneri - DFM di esempio}{0.45}
 \noindent In questo caso si potrebbe optare per una soluzione classica, adottando tre $DT$:\newline\newline
 DTCR(\underline{id\_codice\_ritorno}, codice\_ritorno);\newline
 DTMS(\underline{id\_modalità\_spedizione}, modalità\_spedizione);\newline
@@ -272,7 +272,7 @@ Dal punto di vista dello schema non ci sono variazioni, si mantiene uno schema a
 		\item Viola la semantica di roll-up. Facendo un roll-up da regione a nazione partendo ad esempio dai soli dati \textit{Toscana} e \textit{Altro} in cui aggregando ci ritroviamo con più valori di quelli da cui siamo partiti, ad esempio \textit{Italia}, \textit{Città del Vaticano} e \textit{Repubblica di S. Marino}.
 	\end{itemize}
 	\item \textbf{Bilanciamento verso il basso}: i valori mancanti vengono rimpiazzati con il valore dell'attributo che lo precede nella gerarchia.
-	\centeredImage{img/bilanciamentoversobasso.png}{Bilanciamento verso il basso}{0.55} 
+	\centeredImage{img/bilanciamentoversobasso.png}{Bilanciamento verso il basso}{0.55}
 	\textbf{PRO}:
 	\begin{itemize}
 		\item Buono quando il numero di dati mancanti è limitato.
@@ -282,7 +282,7 @@ Dal punto di vista dello schema non ci sono variazioni, si mantiene uno schema a
 		\item L'interpretazione dei report è complicata perché alcuni dati finiscono nel livello di aggregazione sbagliato, portando a confusione e inesattezze.
 	\end{itemize}
 	\item \textbf{Bilanciamento verso l'alto}: i valori mancanti vengono rimpiazzati con i valori dell'attributo che lo segue nella gerarchia.
-	\centeredImage{img/bilanciamentoversolalto.png}{Bilanciamento verso l'alto}{0.55} 
+	\centeredImage{img/bilanciamentoversolalto.png}{Bilanciamento verso l'alto}{0.55}
 	\textbf{PRO}:
 	\begin{itemize}
 		\item Buono quando il numero di dati mancanti è elevato.

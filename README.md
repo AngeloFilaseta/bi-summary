@@ -1,15 +1,15 @@
 # bi-summary
-Summary for the Business Intelligence Couse (2021/2022).  
+Summary for the Business Intelligence Couse (2021/2022).
 Based on the slides owned by the professor [Stefano Rizzi](https://www.unibo.it/sitoweb/stefano.rizzi/didattica).
-## License 
+## License
 This template originates from [LaTeXTemplates](http://www.LaTeXTemplates.com)
 #### Started from:
-__Lachaise Assignment__  
+__Lachaise Assignment__
 Original Authors:
 
 - Marion Lachaise
 - François Févotte
-  
+
 Vel (vel@LaTeXTemplates.com)
 
 Changes from the original template are listed in the ```layout.tex``` file.
