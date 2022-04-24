@@ -31,4 +31,13 @@ Ovviamente trovare la soluzione che minimizza lo spazio utilizzato diventa un pr
 	\item È sconsigliato provare a creare soluzioni ibride in cui alcune dimensioni stanno in junk ed altre no. L'unico caso può essere se una dimensione ha una cardinalità veramente fuori scala rispetto alle altre e quindi può convenire isolarla, ma è veramente un caso limite.
 	\item Confrontando le due soluzioni avremo quasi sicuramente un vincitore.
 \end{itemize}
+
+\section{Progettazione logica spinta}
+Si tratta di un esercizio in cui si chiede di effettuare la progettazione logica, ma ci sono costrutti di varia natura e si chiede di calcolare l'occupazione di spazio. Qua bisogna esser bravi a trattare in modo corretto ogni costrutto. Non si chiede di minimizzare nulla, basta fornire una soluzione adeguata. Il calcolo dello spazio si effettua nello stesso modo degli esercizi precedenti. Una rapida carrellata di come si possono trattare i vari costrutti:
+\begin{itemize}
+	\item \textbf{Gerarchie condivise}: creare sempre uno snowflake;
+	\item \textbf{Archi opazionali}: nessun impatto;
+	\item \textbf{Gerarchia incompleta}: nessun impatto;
+	\item \textbf{Arco multiplo}: creare una bridge table. Ci sono diverse scelte, possibili, utilizzando solo foreign key o facendo snowflake. Mai scordarsi di aggiungere il peso. La cardinalità della Bridge Table nel caso peggiore è il prodotto delle due cardinalità, ma spesso nella consegna c'è scritto un modo per stimarla meglio.
+\end{itemize}
 \newpage
