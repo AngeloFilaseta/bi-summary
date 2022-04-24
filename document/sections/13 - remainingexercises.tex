@@ -6,4 +6,29 @@ L'esercizio fornisce uno schema di fatto, lo scopo e fare la progettazione logic
 
 \noindent La parte difficile di questo esercizio è capire come strutturare le DT.
 
+
+\section{Calcolo spazio dimensioni degeneri}
+L'esercizio chiede di calcolare quanto spazio occupano determinate soluzioni di uno schema logico in cui vengono prese in considerazione solo dimensioni degeneri.
+
+\noindent Ricordiamo dalla teoria che ci sono tre modi per trattare una dimensione degenere:
+\begin{itemize}
+	\item Inserirla in Fact Table;
+	\item Creare una DT apposita;
+	\item Inserirla in una Junk Table insieme ad altre dimensioni degeneri.
+\end{itemize}
+
+Ovviamente trovare la soluzione che minimizza lo spazio utilizzato diventa un problema combinatorio perché ogni dimensione degenere può essere trattata diversamente. Il consiglio è di fare come segue:
+\begin{itemize}
+	\item Per il momento ignoriamo la Junk Table come possibile soluzione;
+	\item Per ogni dimensione degenere facciamo la seguente valutazione, trattandola come se fosse la sola e unica dimensione degenere:
+	\begin{itemize}
+		\item Creiamo la DT, aggiungendo il surrogato sia in FT che in DT, solitamente negli esercizi ha un peso di 4byte ma comunque c'è scritto. Calcoliamo per entrambe le tabelle il peso utilizzando la formula $peso_tupla \cdot cardinalità$.
+		\item Facciamo lo stesso calcolo utilizzando la stessa formula ma stavolta mettendo il dato direttamente in FT.
+	\end{itemize}
+	\item Il numero più basso indica la soluzione più adatta alla dimensione degenere presa in considerazione. Si prosegue così per tutte le rimanenti.
+	\item Si calcola la dimensione totale della soluzione migliore trovata utilizzando anche i valori che abbiamo già trovato per le DT, si calcola quella della FT e si sommano. Abbiamo il peso della soluzione ottima se non consideriamo la Junk Table.
+	\item Ora però la Junk Table la dobbiamo considerare. La cardinalità della Junk equivale a tutte le possibili combinazioni delle dimensioni degeneri, quindi facciamo il prodotto di tutte le cardinalità. Abbiamo il surrogato sulla DT e sulla FT.
+	\item È sconsigliato provare a creare soluzioni ibride in cui alcune dimensioni stanno in junk ed altre no. L'unico caso può essere se una dimensione ha una cardinalità veramente fuori scala rispetto alle altre e quindi può convenire isolarla, ma è veramente un caso limite.
+	\item Confrontando le due soluzioni avremo quasi sicuramente un vincitore.
+\end{itemize}
 \newpage
