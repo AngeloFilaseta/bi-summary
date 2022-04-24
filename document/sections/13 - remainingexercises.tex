@@ -40,4 +40,7 @@ Si tratta di un esercizio in cui si chiede di effettuare la progettazione logica
 	\item \textbf{Gerarchia incompleta}: nessun impatto;
 	\item \textbf{Arco multiplo}: creare una bridge table. Ci sono diverse scelte, possibili, utilizzando solo foreign key o facendo snowflake. Mai scordarsi di aggiungere il peso. La cardinalità della Bridge Table nel caso peggiore è il prodotto delle due cardinalità, ma spesso nella consegna c'è scritto un modo per stimarla meglio.
 \end{itemize}
+
+\section{Reticoli multidimensionali}
+Dato uno schema di fatto viene chiesto di disegnare il reticolo multidimensionale. Si parte dal group by più fine , quindi tutti gli attributi che si trovano uscendo dal fatto. Se da un attributo parte più di un attributo, ad esempio da A partono B e C, il group by che si ottiene da A è BC e non solo B o solo C. Si continua ad aggregare finché non si arriva al group by vuoto.
 \newpage
