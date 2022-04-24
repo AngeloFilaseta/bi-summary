@@ -195,6 +195,9 @@ La creazione dello schema di fatto è ora molto semplice, perché a partire dall
 \begin{itemize}
 	\item Si rimuove la radice dell'albero e si inserisce il rettangolo col nome del fatto;
 	\item Le misure finiscono nel secondo scompartimento del fatto. Se non ce ne sono si specifica (COUNT), sta ad indicare che per fare aggregazione faremo dei conteggi;
+	\begin{warn}
+		Quando togliamo figli alla radice significa che stiamo aggregando sul fatto. In questo caso bisogna aggiungere la misura di aggregazione in questione. Ci sono casi in cui però il fatto è già aggregato. Ci sono situazioni in cui si sta aggregando comunque, perché non si ha la chiave (la chiave è singola ed è la radice stessa). Il modo migliore per capire se stiamo aggregando è vedere se tra le dimensioni ho tutte le componenti della chiave della tabella scelta come fatto. Se le ho tutte non ho aggregato, se ne manca anche solo una ho aggregato su una dimensione e va aggiunta la misura. Anche le chiavi ovviamente valgono.
+	\end{warn}
 	\item I nodi che non sono stati scelti né come misure né come dimensioni tendenzialmente spariscono
 	\item In questo momento ci poniamo anche il problema degli attributi cross-dimensionali e degli archi multipli. Se l'utente finale desidera effettuare analisi aggiuntive su qualcosa che non è sull'albero degli attributi questo è il momento di aggiungere questi costrutti.
 	\item Per ogni coppia misura-dimensione si specifica se la misura è additiva oppure no.
