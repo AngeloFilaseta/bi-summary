@@ -1,1 +1,58 @@
 \section{Progettazione Fisica}
+
+\subsection{Indici per il Data Mart}
+
+I ragionamenti che facciamo non sono ancora una volta gli stessi dei database operazionali. Essendo molto diverse le esigenze, anche le modalità con cui si utilizzano gli indici sono diverse. Si utilizzano ancora i B$^{+}$-tree, ma accanto a loro si introducono altri tipi di indici. Non tutti i DBMS supportano tutti i tipi di indici.
+
+\begin{warn}
+	A volte quando si parla di indici si usa il termine chiave per indicare l'attributo che si indicizza.
+\end{warn}
+
+\subsubsection{Indici B+-tree}
+Si tratta di un indice che si costruisce su un attributo di una tabella. Si indicizza una sola colonna o un insieme delle colonne di una tabella. Il B$^{+}$-tree è costituito da una sequenza di foglie al cui interno trovo tutti i possibili valori della colonna indicizzata. Per ciascun valore abbiamo una mappa con tutti gli identificatori di riga, ovvero le posizioni fisiche in cui troverò un record contenente l'attributo indicizzato. Per arrivare a trovare il valore che ci interessa abbiamo a disposizione una struttura ad albero, quindi la complessità diventa logaritmica anziché lineare.
+
+\noindent Questi indici sono molto utilizzati nei DB operazionali, soprattutto nei casi in cui dobbiamo rispondere a Query con una selettività molto spinta. Questo tipo di indice va molto bene quando l'attributo può assumere tantissimi valori, ed è quindi sconsigliato utilizzarli quando la selettività è bassa (ad esempio creare un indice sul sesso non ha molto senso).
+
+\noindent Infine i B$^{+}$-tree infine occupano molto spazio.
+
+\noindent Questi indici non sono ottimali per tutti casi, ma possono risultare comunque utili in alcuni contesti.
+
+\subsubsection{Indici bitmap}
+Un indice bitmap su un attributo è composto da una matrice di bit contenente tante righe quante sono le tuple della relazione e tante colonne quanti sono i valori distinti di chiave dell'attributo. Il bitmap (i,j) è posto a TRUE se nella tupla i-esima è presente il valore j-esimo. Questi tipi di indici vengono nella realtà implementati a singole colonne (non esiste un unico file per l'intera matrice), inoltre di solito si aggiunge una struttura ad albero simile a quella del B$^{+}$-tree. Questo è utile perché se in una query ci serve un determinato valore, in tempo logaritmico risaliamo alla colonna corretta. Una volta ottenuto il vettore di bit otteniamo anche gli indici (termine inteso per indicare le posizioni del vettore) in cui il valore è TRUE. Questi valori vengono poi utilizzati per recuperare le tuple corrette.
+\centeredImage{img/bitmap.png}{Ricerca con indici bitmap}{0.4}
+
+\paragraph{Vantaggi}
+In alcuni casi lo spazio utilizzato è molto poco, o comunque sempre minore a quello di un B$^{+}$-tree. In termini di input e output il costo è molto basso in quanto effettuo solo operazioni di read su dei bit. Funzionano molto bene quando esistono query che devono solo fare conteggi. Infatti tramite ottimizzazioni in determinati casi non serve neanche recuperare le tuple, basta  effettuare operazioni binarie sui vettori della matrice.
+\begin{info}[Quanti maschi in Emilia Romagna sono assicurati?]
+	\centeredImage{img/bitmapquery.png}{Query con indici bitmap}{0.4}
+\end{info}
+
+\paragraph{Svantaggi}
+A differenza dei B$^{+}$-tree, gli indici bitmap sono adatti ad attributi con una ridotta cardinalità. Ogni valore distinto infatti richiede un vettore di bit. Più aumentano le chiavi distinte e più aumenta la sparsità della matrice. Lo spazio occupato dai B$^{+}$ resta più o meno costante, mentre quello della matrice di bitmap tende a crescere linearmente.
+\centeredImage{img/bitmapspace.png}{Confronto di spazio tra B$^{+}$ e Bitmap}{0.4}
+
+\subsubsection{Indici di Join}
+Sono indici completamente differenti dagli altri perché non indicizzano un attributo ma un'operazione, in particolare le operazioni di join. L'idea consiste nel precostruire il join, in particolare di precalcolano le tuple che soddisfano un certo predicato. A questo punto mi salvo dentro l'indice tutte le accoppiate di rid (row identifier) che soddisfano le condizioni di join. I rid sono puntatori diretti che con un singolo accesso a disco vanno a prendere la riga giusta.
+
+\centeredImage{img/joinindexex.png}{Esempio di indici di Join}{0.6}
+
+\subsubsection{Indici a Stella}
+Questo è un indice specifico per i Data Mart. Si tratta di una generalizzazione dell'indice di join che copre un join a stella (tra la fact table e tutte le DT). lo scopo, banalmente, è precalcolare il join a stella con le stelle modalità già illustrate. Invece di avere due colonne avrò una colonna per ciascuna FT e DT.
+
+Esiste un problema non da poco. Anche per gli indici a stella, l'ordine con cui considero le colonne dentro l'indice impatta pesantemente sull'utilizzabilità dell'indice. Nell'esempio illustrato sopra per esempio non potremmo avere un predicato in cui richiediamo solo un prodotto, in quanto le collone devono essere considerate in ordine per poter essere utilizzate. Questi tipi di indici sono quindi molto efficienti solo quando utilizzati in interrogazioni che coinvolgono tutte o le sole colonne iniziali dell'indice. In caso contrario le prestazioni sono sub-ottime.
+
+una soluzione potrebbe essere creare più indici con ordine diverso, ma crearle tutte è impossibile perché sarebbero potenzialmente troppi (esponenziale).
+
+
+\subsection{Consigli sugli indici}
+L'indicizzazione di base si svolge sulle chiavi esterne della Fact Table.
+\noindent In genere si consiglia di utilizzare dei B$^{+}$, dei join index o degli star index sulle foreign key della fact table. Sconsigliati i bitmap in quanto la chiave primaria non ha una cardinalità ridotta.
+
+Se sappiamo che sono frequenti interrogazioni su uno specifico parametro (ad esempio mese o anno) ha molto senso inserire un indice. Il tipo dipende dalla cardinalità dell'attributo, in genere B$^{+}$ e bitmap sono i più utilizzati.
+
+Attenzione al tipo di ottimizzatore che utilizza il DBMS. Infatti le query vengono eseguito con determinate impostazioni di ottimizzazione. Esistono due tipi di ottimizzatori:
+\begin{itemize}
+	\item \textbf{Rule based}: sceglie il piano di accesso alle tabelle sulla base di come è fatta la query e degli indici a disposizione. Utilizzare l'indice però non porta necessariamente ad un miglioramento.
+	\item \textbf{Cost based}: il piano di accesso viene scelto sulla base di una stima dei costi. Vengono prese in considerazione più opzioni e si cerca di precalcolare attraverso funzioni di costo qual è il piano più economico. Vengono ovviamente effettuate delle approssimazioni quindi potrebbe capitare che il risultato non sia necessariamente quello ottimo.
+\end{itemize}
+È quindi inutile scegliere determinati indici senza conoscere l'ottimizzatore in uso, in quanto le scelte che potrebbe intraprendere non sono sempre facili da predire. Spesso serve effettuare test ed analisi per scegliere in modo accurato cosa verrà utilizzato e perché.

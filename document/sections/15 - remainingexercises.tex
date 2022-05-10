@@ -13,7 +13,7 @@ Anche secondo la teoria le soluzioni sono due:
 	\item creare una tabella con legami di parentela.
 \end{itemize}
 La tabella in aggiunta ha i due id del nodo padre e figlio come chiave. Non vanno inseriti solo i legami tra padre e figlio, va inserito ogni legame con ogni nodo possibile, quindi il nodo con se stesso, nodo con figli, nodo con nipoti, nodo con bisnipoti etc. Non vanno inserite entry se i legami non esistono. La tuple è formata da ID padre, ID figlio, livello e se è foglia (booleano).
-\section{Calcolo spazio dimensioni degeneri}
+\subsection{Calcolo spazio dimensioni degeneri}
 L'esercizio chiede di calcolare quanto spazio occupano determinate soluzioni di uno schema logico in cui vengono prese in considerazione solo dimensioni degeneri.
 \noindent Ricordiamo dalla teoria che ci sono tre modi per trattare una dimensione degenere:
 \begin{itemize}
@@ -35,7 +35,7 @@ Ovviamente trovare la soluzione che minimizza lo spazio utilizzato diventa un pr
 	\item È sconsigliato provare a creare soluzioni ibride in cui alcune dimensioni stanno in junk ed altre no. L'unico caso può essere se una dimensione ha una cardinalità veramente fuori scala rispetto alle altre e quindi può convenire isolarla, ma è veramente un caso limite.
 	\item Confrontando le due soluzioni avremo quasi sicuramente un vincitore.
 \end{itemize}
-\section{Progettazione logica spinta}
+\subsection{Progettazione logica spinta}
 Si tratta di un esercizio in cui si chiede di effettuare la progettazione logica, ma ci sono costrutti di varia natura e si chiede di calcolare l'occupazione di spazio. Qua bisogna esser bravi a trattare in modo corretto ogni costrutto. Non si chiede di minimizzare nulla, basta fornire una soluzione adeguata. Il calcolo dello spazio si effettua nello stesso modo degli esercizi precedenti. Una rapida carrellata di come si possono trattare i vari costrutti:
 \begin{itemize}
 	\item \textbf{Gerarchie condivise}: creare sempre uno snowflake;
@@ -43,14 +43,14 @@ Si tratta di un esercizio in cui si chiede di effettuare la progettazione logica
 	\item \textbf{Gerarchia incompleta}: nessun impatto;
 	\item \textbf{Arco multiplo}: creare una bridge table. Ci sono diverse scelte, possibili, utilizzando solo foreign key o facendo snowflake. Mai scordarsi di aggiungere il peso. La cardinalità della Bridge Table nel caso peggiore è il prodotto delle due cardinalità, ma spesso nella consegna c'è scritto un modo per stimarla meglio.
 \end{itemize}
-\section{Reticoli multidimensionali}
+\subsection{Reticoli multidimensionali}
 Dato uno schema di fatto viene chiesto di disegnare il reticolo multidimensionale. Si parte dal group by più fine , quindi tutti gli attributi che si trovano uscendo dal fatto. Se da un attributo parte più di un attributo, ad esempio da A partono B e C, il group by che si ottiene da A è BC e non solo B o solo C. Si continua ad aggregare finché non si arriva al group by vuoto.
-\section{Miglior punto per Snowflake}
+\subsection{Miglior punto per Snowflake}
 Lo scopo è trovare euristicamente il miglior punto per fare snowflake su uno schema di fatto. Il punto migliore è (tranne in casi particolari) sempre quello in cui il rapporto tra le cardinali è maggiore. Una volta trovato il punto migliore è sufficiente effettuare la classica progettazione logica. Se l’esercizio chiede il calcolo del peso della soluzione trovata è sufficiente utilizzare la solita formula $peso_tupla \cdot cardinalità$.
-\section{Trovare numero eventi primari entro cui junk table è migliore}
+\subsection{Trovare numero eventi primari entro cui junk table è migliore}
 Il procedimento è tale identico all’esercizio in cui bisogna trovare la soluzione più conveniente, ma la carnalità va rimpiazzata con una X che è il valore da trovare. Tra le due soluzioni migliori trovate basterà fare una diseguaglianza e trovare il valore di X.
-\section{Viste candidate}
+\subsection{Viste candidate}
 In questi esercizi non è richiesto di rappresentare tutto il reticolo, ma può essere utile disegnarne una parte.  Lo scopo è trovare le viste che ha senso materializzare dati alcuni group by. Le viste che comprendono i group by sono sicuramente candidate. La prima cosa da fare è scrivere i group by è cercare di “metterli in fila” ossia capire se esistono legami di parentela. Non sempre questi legami esistono, spesso non è possibile arrivare da una vista all’altro con dei passi di aggregazione. Lo scopo è cercare di trovare una specie di “minimo comune multiplo” tra i group by che non sono collegati tra loro (ove possibile) in modo da riuscire a costruire alberi di dipendenze. Per ogni coppia in pratica bisogna trovare la vista più bassa possibile in grado di materializzare entrambe. A fine iterazione avremo la lista delle viste candidate.
-\section{Scenari temporali e viste materializzate}
+\subsection{Scenari temporali e viste materializzate}
 In questi esercizi ancora una volta si chiede di effettuare progettazione logica, ma in aggiunta si chiede di materializzare delle viste e di gestire casi in cui si vogliono prendere in considerazione diversi scenari temporali. Se gli scenari temporali interessanti in una relazione sono solo di un tipo tra 1 e 2, cioè verità storica o attualizzazione, lo schema non subisce alcun tipo di impatto. Nel caso in cui si agisce su più di uno scenario temporale o sulla retrodatazione di entra nel tipo 3, e in questo caso si agisce sullo schema. Si aggiunge nella DT interessata il campo di data inizio e data fine validità e il “master” ossia il vecchio record di riferimento. Per materializzare una vista è necessario aggiungere delle Fact Table in cui le chiavi sono surrogati degli attributi richiesti. I surrogati non compaiono dal nulla, bisogna aggiungere delle tabelle, o facendo snowflake sullo schema originale o semplicemente replicando le tabelle.
 \newpage
