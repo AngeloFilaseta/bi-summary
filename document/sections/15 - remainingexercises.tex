@@ -49,6 +49,8 @@ Dato uno schema di fatto viene chiesto di disegnare il reticolo multidimensional
 Le gerarchie condivise vanno trattate come se fossero separate. Quindi diamo un ruolo ai collegamenti della gerarchia e poi li trattiamo come se fossero separate. Il ruolo lo utilizziamo per identificare la dimensione.
 \subsubsection{Attributo Cross-dimensionale}
 Le due dimensioni che creano l'attributo cross-dimensionale collassano entrambe sull'attributo cross. Quindi  se \textbf{a} e \textbf{b} portano a  \textbf{c}, il group by {\textbf{ab}} collassa direttamente in {\textbf{c}}.
+\subsubsection{Arco Multiplo}
+Essendo l'associazione tra di due punti dell'arco multiplo una molti a molti, è possibile (anche se ha poco senso) avere un group by che comprende entrambi i valori. Quindi un arco multiplo da cui parte \textbf{a} che va verso \textbf{b} passa da \textbf{a} ad \textbf{ab}  che poi si divide in \textbf{a} e \textbf{b} che convergono a {}. In pratica sviluppare l'arco multiplo equivale a fare un push-down dell'arco, facendolo diventare un normale arco che parte dal livello inferiore rispetto all'origine.
 \subsection{Miglior punto per Snowflake}
 Lo scopo è trovare euristicamente il miglior punto per fare snowflake su uno schema di fatto. Il punto migliore è (tranne in casi particolari) sempre quello in cui il rapporto tra le cardinali è maggiore. Una volta trovato il punto migliore è sufficiente effettuare la classica progettazione logica. Se l’esercizio chiede il calcolo del peso della soluzione trovata è sufficiente utilizzare la solita formula $peso_tupla \cdot cardinalità$.
 \subsection{Trovare numero eventi primari entro cui junk table è migliore}
