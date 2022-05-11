@@ -47,6 +47,8 @@ Si tratta di un esercizio in cui si chiede di effettuare la progettazione logica
 Dato uno schema di fatto viene chiesto di disegnare il reticolo multidimensionale. Si parte dal group by più fine , quindi tutti gli attributi che si trovano uscendo dal fatto. Se da un attributo parte più di un attributo, ad esempio da A partono B e C, il group by che si ottiene da A è BC e non solo B o solo C. Si continua ad aggregare finché non si arriva al group by vuoto.
 \subsubsection{Gerarchie condivise}
 Le gerarchie condivise vanno trattate come se fossero separate. Quindi diamo un ruolo ai collegamenti della gerarchia e poi li trattiamo come se fossero separate. Il ruolo lo utilizziamo per identificare la dimensione.
+\subsubsection{Convergenza}
+A differenza della condivisione non ci sono due istanze dell'attributo ma uno solo, quindi tutti gli attributi convergono semplicemente allo stesso attributo.
 \subsubsection{Attributo Cross-dimensionale}
 Le due dimensioni che creano l'attributo cross-dimensionale collassano entrambe sull'attributo cross. Quindi  se \textbf{a} e \textbf{b} portano a  \textbf{c}, il group by {\textbf{ab}} collassa direttamente in {\textbf{c}}.
 \subsubsection{Arco Multiplo}
