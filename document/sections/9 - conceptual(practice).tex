@@ -202,6 +202,22 @@ La creazione dello schema di fatto è ora molto semplice, perché a partire dall
 	\item In questo momento ci poniamo anche il problema degli attributi cross-dimensionali e degli archi multipli. Se l'utente finale desidera effettuare analisi aggiuntive su qualcosa che non è sull'albero degli attributi questo è il momento di aggiungere questi costrutti.
 	\item Per ogni coppia misura-dimensione si specifica se la misura è additiva oppure no.
 \end{itemize}
+\subsection{Scelta delle misure}
+La scelta delle misure si fa quasi per esclusione. I figli diretti della radice che corrispondono ad attributi numerici (quindi i valori su cui vogliamo calcolare somme, medie, massimi, minimi) sono misure. Gli attributi che non sono stati scelti come dimensioni o diventano misure o si buttano via. In questa fase bisogna capire qual è la granularità del fatto. Se abbiamo cancellato degli attributi che sono figli diretti della radice abbiamo per forza già aggregato.\newline
+\noindent Nell'immagine che segue non abbiamo aggregato e abbiamo mantenuto tutti i figli diretti. Se abbiamo cinque entry nel DB di partenza ci ritroveremo con cinque eventi primari nel cubo.
+\centeredImage{img/measure1.png}{Scelta delle misure senza aggregazioni}{0.6}
+\noindent In questo caso invece il progettista ha scelto di aggregare, cancellando il dettaglio dello scontrino. Le celle sono quindi aggregati. C'è una corrispondenza molti a uno tra le righe del DB sorgente e le celle che rappresentano gli eventi primari. In questo caso dentro "vite" ritrovo il valore \textit{13} perché avendo aggregato sugli scontrini non riesco più a risalire a quali fossero gli elementi in ogni scontrino. Quindi ora è possibile solo avere indicazioni su quanti prodotti sono stati venduti nell'arco di una giornata.\newline
+In questo caso la misura non sarà più \textit{quantità} ma \textit{quantità totale}
+\centeredImage{img/measure2.png}{Scelta delle misure senza aggregazioni}{0.6}
+\noindent Potrà capitare negli esercizi di voler mettere anche più di una misura, in questo caso \textit{quantità totale} e \textit{quantità media}, ma bisogna sempre partire da un attributo di partenza che viene utilizzato a fronte dell'operazione di aggregazione. Importante ricordarsi di definire l'additività. Le somme sono additive, le medie ovviamente no.\newline
+Potremmo pensare di voler utilizzare misure che non sono figli diretti della radice. In questo caso bisogna:
+\begin{enumerate}
+	\item Farlo diventare figlio diretto della radice: per farlo è necessario spostare l'arco, operazione legale ma che comporta la perdita di dipendenze funzionali. Ogni volta che viene fatta questa operazione stiamo cancellando delle dipendenze funzionali. Potrebbero quindi verificarsi delle anomalie di aggregazione. Questo può portare al double counting;
+	\begin{warn}
+		Quindi in pratica si può fare, ma è necessario sempre cercare di capire che cosa sta succedendo. Di base non è facile capirlo e spesso sono richieste analisi particolari. All'esame si fa solo se è palese che sia una misura.
+	\end{warn}
+	\item Cancellare la dimensione ed inserire la misura.
+\end{enumerate}
 \subsection{Carico di lavoro}
 Sul DFM é possibile annotare le query, per esempio, la seguente immagine rappresenta il \textit{"Totale della quantità venduta per i diversi tipi di prodotto, in ogni settimana e città ma solo per i prodotti alimentari"}.
 \centeredImage{img/querydfm.png}{Esempio di Query raffigurabile su DFM}{0.5}
