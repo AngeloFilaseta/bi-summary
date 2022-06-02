@@ -1,12 +1,12 @@
 \section{Esercizi di ETL (Laboratorio -  MODULO 2)}
 \textbf{Scopo:}\newline
-Lo scopo è creare un flusso per popolare le tabelle delle DT.\newline
-Siamo partiti in modo incrementale, iniziando con un semplice flusso che evolveremo nel tempo:
+Lo scopo è creare un flusso per popolare le tabelle delle DT. Per farlo utilizziamo il software Tableau Prep. Ci connettiamo al DB, avremo la tabella relativa ai dati operazionali e una tabella per l'output della DT.\newline
+Partiamo in modo incrementale, iniziando con un semplice flusso che evolveremo nel tempo:
 \begin{itemize}
 	\item \textbf{Flusso semplice - Pulizia}: \begin{itemize}
-		\item Si parte dalla tabella sorgente;
-		\item Si crea un'operazione di pulizia, che rimuove i campi inutili e rinomina quelli presenti, magari rimuovendo eventuali prefissi;
-		\item Carica i dati sulla tabella destinazione.
+		\item Si sceglie la tabella sorgente (quella del DB operazionale) e si trascina nell'area di lavoro.
+		\item Si crea un'operazione di pulizia, che rimuove i campi inutili e rinomina quelli presenti, magari rimuovendo eventuali prefissi e cercando di rendere i nomi simili alla sintassi utilizzata nella DT;
+		\item Si inserisce un'operazione di output che carica i dati sulla tabella della DT. Per farlo è necessario selezionare la connessione già aperta e l'opzione di scrittura a "Sovrascrivi".
 	\end{itemize}
 	\centeredImage{img/mod2/labetl1.png}{Flusso ETL - Flusso semplice}{0.5}
 	Ma mancano ancora dei passi, i dati vengono sempre riscritti da capo, non c'è nessuna differenza tra il modo in cui vengono trattati i dati vecchi e i dati nuovi. Inoltre manca ancora l'aggiunta di chiavi surrogate.
@@ -31,28 +31,50 @@ Siamo partiti in modo incrementale, iniziando con un semplice flusso che evolver
 	\centeredImage{img/mod2/labetl3.png}{Flusso ETL - Alimentazione incrementale - Soluzione Semplificata}{0.6}
 	In questo caso si effettua un full outer join. Otterremo una tabella che contiene tutti i dati ma NULL in corrispondenza dei campi mancanti. Nel passo di pulizia poi attraverso l'opzione \textit{Campo Calcolato} si può creare un campo attraverso uno script, per esempio, per inserire il campo \textit{size} la regola da utilizzare è:
 	\begin{verbatim}
-		IF(ISNULL([size])) THEN [dt_size] ELSE [size] END
+		IF(ISNULL([new_size])) THEN [dt_size] ELSE [size] END
 	\end{verbatim}
-	Ovviamente è necessario creare un campo calcolato per ogni attributo che desideriamo mantenere.
+	Ovviamente è necessario creare un campo calcolato per ogni attributo che desideriamo mantenere. Una volta aggiunti tutti i campi nuovi possiamo cancellare tutti i vecchi e rinominare quelli creati togliendo il prefisso scelto.
 	\item \textbf{Flusso con Chiave Surrogata}:
 	Serve utilizzare una tabella in più per mantenere le corrispondenze tra surrogato e chiave della tabella di partenza:
 	\begin{verbatim}
 		create table hash_dt_part (
-		partkey integer primary key,
-		id serial
+			partkey integer primary key,
+			id serial
 		);
 	\end{verbatim}
 	\centeredImage{img/mod2/labetlsurrogate1.png}{Flusso ETL - Chiave surrogata}{0.85}
 	\begin{itemize}
-		\item Si identificano con un join i nuovi record;
-		\item Si mantiene solo la chiave primaria della tabella sorgente;
-		\item Si inserisce nella tabella di corrispondenza il valore della chiave primaria, associato ad un surrogato auto generato dal DBMS.
-		\item All'interno della DT bisogna ora utilizzare gli ID surrogati e non più la chiave primaria sorgente.
+		\item Si identificano con un outer join \textbf{sulla tabella operazionale} i nuovi record;
+		\item Si crea un passo di pulizia in cui mantiene solo la chiave primaria della tabella sorgente;
+		\item Si crea il passo di output che carica i dati sulla tabella di hash. La modalità di scrittura non è "Sovrascrivi" ma "Aggiungi", l'ID verrà automaticamente generato dal DBMS.
+		\item Ora si crea un inner join tra il db operazionale e la hash table, in modo da recuperare l'ID surrogato creato. Se abbiamo eseguito il flusso creato precedentemente il join troverà ogni singola corrispondenza.
+		\item Ora che abbiamo recuperato l'ID surrogato possiamo utilizzarlo come nuovo ID per alimentare la DT.
 	\end{itemize}
 	\item \textbf{Flusso finale}:
 	\centeredImage{img/mod2/labetlsurrogate2.png}{Flusso ETL - Chiave surrogata con alimentazione incrementale}{0.85}
 	\centeredImage{img/mod2/labetlsurrogate3.png}{Flusso ETL - Chiave surrogata con alimentazione incrementale semplificata}{0.85}
 \end{itemize}
 \centeredImage{img/mod2/etlrefschema.png}{Schema di riferimento per la modellazione}{0.75}
-
+\subsection{Dettagli aggiuntivi}
+\begin{itemize}
+	\item Per alimentare alcune DT è necessario estrarre campi da più tabelle del DB sorgente. In questo caso prima si effettuano le operazioni di join tra tutte le tabelle coinvolte in modo da ottenere tutti i campi interessati. Poi si procede come al solito.
+	\item Ci sono casi in cui recuperare i dati risulta più facile utilizzando una query anziché facendo operazioni. Per farlo si può selezionare "SQL personalizzato". La sintassi da usare è quella di PosteSQL, segue una query di esempio:
+	\begin{minted}{sql}
+		select distinct(o_orderdate) from tpcd.orders
+		union
+		select distinct(l_shipdate) from tpcd.lineitem
+		union
+		select distinct(l_commitdate) from tpcd.lineitem
+		union
+		select distinct(l_receiptdatedate) from tpcd.lineitem
+	\end{minted}
+	\item Se viene richiesto di creare una struttura temporale per la DT della data, il mese in anno si crea utilizzando la seguente formula per il campo calcolato:
+	\begin{verbatim}
+		str(DATEPART('month', [d])) + '-' + str(DATEPART('year', [d]))
+	\end{verbatim}
+	Per l'anno è  ancora più facile:
+	\begin{verbatim}
+		 str(DATEPART('year', [d]))
+	\end{verbatim}
+\end{itemize}
 \newpage

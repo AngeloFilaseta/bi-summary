@@ -2,7 +2,7 @@
 \subsection{Calcolo dimensioni dello schema logico a partire dallo schema di fatto}
 L'esercizio fornisce uno schema di fatto, lo scopo e fare la progettazione logica creando la FT e le DT. In aggiunta è necessario calcolare quanti byte occupa la soluzione proposta. In alcuni esercizi viene chiesto di trovare la soluzione che occupa meno spazio, in altre di trovare più di una soluzione o comunque le principali. Per trovare la soluzione meno costosa spesso basta fare snowflaking il più possibile.\newline
 
-\noindent Una volta identificate le DT il calcolo della dimensione è la sommatoria del peso di tutte le tabelle. Per calcolare il peso di una tabella la formula da utilizzare è $peso_tupla \cdot cardinalità$.\newline
+\noindent Una volta identificate le DT il calcolo della dimensione è la sommatoria del peso di tutte le tabelle. Per calcolare il peso di una tabella la formula da utilizzare è $pesotupla \cdot cardinality$.\newline
 
 \noindent La parte difficile di questo esercizio è capire come strutturare le DT.
 
@@ -26,7 +26,7 @@ Ovviamente trovare la soluzione che minimizza lo spazio utilizzato diventa un pr
 	\item Per il momento ignoriamo la Junk Table come possibile soluzione;
 	\item Per ogni dimensione degenere facciamo la seguente valutazione, trattandola come se fosse la sola e unica dimensione degenere:
 	\begin{itemize}
-		\item Creiamo la DT, aggiungendo il surrogato sia in FT che in DT, solitamente negli esercizi ha un peso di 4byte ma comunque c'è scritto. Calcoliamo per entrambe le tabelle il peso utilizzando la formula $peso_tupla \cdot cardinalità$.
+		\item Creiamo la DT, aggiungendo il surrogato sia in FT che in DT, solitamente negli esercizi ha un peso di 4byte ma comunque c'è scritto. Calcoliamo per entrambe le tabelle il peso utilizzando la formula $pesotupla \cdot cardinality$.
 		\item Facciamo lo stesso calcolo utilizzando la stessa formula ma stavolta mettendo il dato direttamente in FT.
 	\end{itemize}
 	\item Il numero più basso indica la soluzione più adatta alla dimensione degenere presa in considerazione. Si prosegue così per tutte le rimanenti.
@@ -55,7 +55,7 @@ Le due dimensioni che creano l'attributo cross-dimensionale collassano entrambe 
 \subsubsection{Arco Multiplo}
 Essendo l'associazione tra di due punti dell'arco multiplo una molti a molti, è possibile (anche se ha poco senso) avere un group by che comprende entrambi i valori. Quindi un arco multiplo da cui parte \textbf{a} che va verso \textbf{b} passa da \textbf{a} ad \textbf{ab}  che poi si divide in \textbf{a} e \textbf{b} che convergono a {}. In pratica sviluppare l'arco multiplo equivale a fare un push-down dell'arco, facendolo diventare un normale arco che parte dal livello inferiore rispetto all'origine.
 \subsection{Miglior punto per Snowflake}
-Lo scopo è trovare euristicamente il miglior punto per fare snowflake su uno schema di fatto. Il punto migliore è (tranne in casi particolari) sempre quello in cui il rapporto tra le cardinali è maggiore. Una volta trovato il punto migliore è sufficiente effettuare la classica progettazione logica. Se l’esercizio chiede il calcolo del peso della soluzione trovata è sufficiente utilizzare la solita formula $peso_tupla \cdot cardinalità$.
+Lo scopo è trovare euristicamente il miglior punto per fare snowflake su uno schema di fatto. Il punto migliore è (tranne in casi particolari) sempre quello in cui il rapporto tra le cardinali è maggiore. Una volta trovato il punto migliore è sufficiente effettuare la classica progettazione logica. Se l’esercizio chiede il calcolo del peso della soluzione trovata è sufficiente utilizzare la solita formula $pesotupla \cdot cardinality$.
 \subsection{Trovare numero eventi primari entro cui junk table è migliore}
 Il procedimento è tale identico all’esercizio in cui bisogna trovare la soluzione più conveniente, ma la carnalità va rimpiazzata con una X che è il valore da trovare. Tra le due soluzioni migliori trovate basterà fare una diseguaglianza e trovare il valore di X.
 \subsection{Viste candidate}
