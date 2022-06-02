@@ -60,21 +60,21 @@ Partiamo in modo incrementale, iniziando con un semplice flusso che evolveremo n
 	\item Per alimentare alcune DT è necessario estrarre campi da più tabelle del DB sorgente. In questo caso prima si effettuano le operazioni di join tra tutte le tabelle coinvolte in modo da ottenere tutti i campi interessati. Poi si procede come al solito.
 	\item Ci sono casi in cui recuperare i dati risulta più facile utilizzando una query anziché facendo operazioni. Per farlo si può selezionare "SQL personalizzato". La sintassi da usare è quella di PosteSQL, segue una query di esempio:
 	\begin{minted}{sql}
-		select distinct(o_orderdate) from tpcd.orders
-		union
-		select distinct(l_shipdate) from tpcd.lineitem
-		union
-		select distinct(l_commitdate) from tpcd.lineitem
-		union
-		select distinct(l_receiptdatedate) from tpcd.lineitem
+select distinct(o_orderdate) from tpcd.orders
+union
+select distinct(l_shipdate) from tpcd.lineitem
+union
+select distinct(l_commitdate) from tpcd.lineitem
+union
+select distinct(l_receiptdatedate) from tpcd.lineitem
 	\end{minted}
 	\item Se viene richiesto di creare una struttura temporale per la DT della data, il mese in anno si crea utilizzando la seguente formula per il campo calcolato:
 	\begin{verbatim}
-		str(DATEPART('month', [d])) + '-' + str(DATEPART('year', [d]))
+	str(DATEPART('month', [d])) + '-' + str(DATEPART('year', [d]))
 	\end{verbatim}
 	Per l'anno è  ancora più facile:
 	\begin{verbatim}
-		 str(DATEPART('year', [d]))
+	str(DATEPART('year', [d]))
 	\end{verbatim}
 \end{itemize}
 \newpage

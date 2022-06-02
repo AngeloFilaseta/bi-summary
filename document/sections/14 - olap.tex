@@ -3,7 +3,7 @@
 	\item Dopo essersi connessi al DB è necessario trascinare la FT e le DT nello spazio centrale e fare i dovuti collegamenti tra le tabelle, specificando le chiavi esterne.
 	\item Se alcune tabelle vengono utilizzate più volte non bisogna utilizzare sempre la stessa ma replicarla più volte. Capita spesso nel caso delle date. In questo caso sarà necessario dare nomi diversi alle tabelle.
 	\item Selezionando in alto "Estrazione" i dati vengono caricati su un file ed utilizzati da lì invece che dal DB in live. Per salvarlo è necessario cliccare sul foglio di lavoro nella tendina in basso una volta finita l'impostazione delle tabelle.
-	\item Si selezionano a questo punto i campi da nascondere, ovvero tutti i surrogati. Selezionandoli tenendo premuto Ctrl e facendo tasto destro $\xrightarrow{}$ Nascondi/Hide. Dalla schermata precedente è possibile abilitare una spunta per vedere i campi nascosti se ci sbagliamo.
+	\item Si selezionano a questo punto i campi da nascondere, ovvero tutti i surrogati. Selezionandoli tenendo premuto Ctrl e facendo tasto destro $\xrightarrow{}$ Nascondi/Hide. Dalla schermata precedente è possibile abilitare una spunta per vedere i campi nascosti se ci sbagliamo. Anche i campi di conteggio si possono rimuovere, ad eccezione di quello della fact table perché ritenuto interessante.
 	\item Controllare cosa deve essere trattato come misura e cosa come attributo. Le chiavi naturali a volte vengono trattate come misure, quando invece per noi sono dimensioni. Controllare sempre che tutto vada bene. Cliccando sul campo col tasto sinistro ci sarà anche l'opzione per convertire a dimensione e viceversa. Ricordiamo che le vere misure stanno solo sulla Fact Table.
 	\item Possiamo convertire gli attributi da continui (verdi) a blu (categorici) e viceversa. Non cambia tanto, ma il modo in cui verranno visualizzati e trattati è leggermente diverso. Un esempio in cui fare questa conversione è per esempio l'anno, che viene percepito da Tableau come continuo essendo un numero, ma che vogliamo in realtà trattare come un categorico.
 	\item Selezionando i campi da mettere in gerarchia e facendo (Tasto destro $\xrightarrow{}$ Gerarchia $\xrightarrow{}$ Crea gerarchia) si crea una gerarchia. In questo caso l'ordine è importante. L'attributo più fine sta sempre più in basso.
@@ -18,16 +18,17 @@ Una volta predisposto tutto il cubo si possono fare le query OLAP, che sono comp
 	\item una o più misure su cui si calcola il valore aggregato.
 	\item opzionalmente dei filtri.
 \end{itemize}
-\subsection{Group-By-Set}
-Gli attributi del group-by-set finiscono sulle righe e sulle colonne del tool. Per avere una visione tabellare conviene mettere le misure come Etichetta.
-\subsection{Pivoting}
-L'operazione di Pivoting è supportata nativamente, è denotata dal tasto nella barra in alto in cui ci sono due frecce che stanno ad indicare lo swap tra righe e colonne.
-\subsection{Slicing}
-Piazzando un attributo su un filtro possiamo selezionare solo i valori che ci interessano, questo equivale all'operazione di \textit{Slicing}.\newline
-\subsection{Drill-Down}
-L'operazione di \textit{Drill-Down} equivale e premere sul tasto + a sinistra dell'attributo.
-\subsection{Roll-Up}
-Il \textit{Roll-Up} non è nativamente supportato, bisogna fare a mano.\newline
+
+
+\subsection{Funzionalità}
+\begin{itemize}
+	\item \textbf{Group-by-set}: Gli attributi del group-by-set finiscono sulle righe e sulle colonne del tool. Per avere una visione tabellare conviene mettere le misure come Etichetta;
+	\item \textbf{Pivoting}: L'operazione di Pivoting è supportata nativamente, è denotata dal tasto nella barra in alto in cui ci sono due frecce che stanno ad indicare lo swap tra righe e colonne;
+	\item \textbf{Slicing}: Piazzando un attributo su un filtro possiamo selezionare solo i valori che ci interessano, questo equivale all'operazione di \textit{Slicing};
+	\item \textbf{Drill-Down}: L'operazione di \textit{Drill-Down} equivale e premere sul tasto + a sinistra dell'attributo;
+	\item \textbf{Roll-Up}: Il \textit{Roll-Up} non è nativamente supportato, bisogna fare a mano;
+\end{itemize}
+
 \subsection{Ordinamento}
 Facendo tasto destro su un attributo si può scegliere anche l'ordinamento. Ci sono diversi tipi di ordinamento.
 \begin{itemize}
@@ -36,10 +37,9 @@ Facendo tasto destro su un attributo si può scegliere anche l'ordinamento. Ci s
 	\item \textbf{Campo}: Si ordina sulla base di un valore visualizzato. Molto utile.
 	\item \textbf{Manuale}: L'ordinamento è scelto dall'utente;
 	\item \textbf{Nidificato}: Stessa cosa di campo, ma cambia leggermente nel caso in cui ci sono più campi su cui si sta visualizzando il dato.
-	\centeredImage{img/mod2/gerarchie.png}{Ordine corretto delle gerarchie}{0.42}
-	In questo esempio l'ordinamento su campo manufacturer è sbagliato perché i dati non vengono calcolati al livello più fine, ma si fermano a quello prima, che non va bene per ogni Region. L'ordinamento nidifcato invece andrà al livello più fine.
-	\centeredImage{img/mod2/manufact.png}{Ordinamento per campo - Sbagliato}{0.25}
 \end{itemize}
+\noindent In questo esempio l'ordinamento su campo manufacturer è sbagliato perché i dati non vengono calcolati al livello più fine, ma si fermano a quello prima, che non va bene per ogni Region. L'ordinamento nidifcato invece andrà al livello più fine.
+\centeredImage{img/mod2/manufact.png}{Ordinamento per campo - Sbagliato}{0.25}
 \subsection{Nuovi campi}
 Si possono creare nuovi campi a partire da quelli che abbiamo. Ci sono più modi:
 \begin{itemize}
@@ -48,11 +48,19 @@ Si possono creare nuovi campi a partire da quelli che abbiamo. Ci sono più modi
 	\item \textbf{Bin}: Permette di discretizzare un valore continuo. Per esempio si possono creare delle fasce. (Tasto destro $\xrightarrow{}$ Crea $\xrightarrow{}$ Contenitori). Purtroppo si può fare binning solo in base alla grandezza del contenitore.
 	\item \textbf{Campi calcolati}: Si creano campi in base a formule che specifica l'utente. Si può fare a diversi livelli di granularità:
 	\begin{itemize}
-		\item Line granularity: per esempio: $[Extendedprice] * [Quantity]$
-		\item Aggregated granularity: per esempio:\newline $SUM(IF([Tax]>0)\;THEN\;1\;ELSE\;0\; END)/COUNT([Quantity])$
-		Si possono anche creare campi categorici:\newline
-		$IF([Tax]>0)\;THEN\;'Taxed'\;ELSE\;'Not Taxed'\; END$
-		\item Level of detail (LOD) expressions: permettono di definire una formula utilizzando un group-by-set diverso da quello della query. Le Keyword utilizzabili sono:
+		\item Line granularity: per esempio:
+		\begin{minted}{javascript}
+[Extendedprice] * [Quantity]
+		\end{minted}
+		\item Aggregated granularity: per esempio:\newline
+		\begin{minted}{javascript}
+SUM(IF([Tax]>0) THEN 1 ELSE 0 END) / COUNT([Quantity])
+		\end{minted}
+		Si possono anche creare campi categorici:
+		\begin{minted}{javascript}
+IF([Tax]>0) THEN 'Taxed' ELSE 'Not Taxed' END
+		\end{minted}
+		\item\textbf{ Level of detail (LOD) expressions}: permettono di definire una formula utilizzando un group-by-set diverso da quello della query. Le Keyword utilizzabili sono:
 		\begin{itemize}
 			\item \textbf{FIXED}: Si scelgono manualmente gli attributi.
 			\item \textbf{INCLUDE}: Gli attributi specificati nella query + altri attributi.
