@@ -1,7 +1,7 @@
 \section{Progettazione dell'ETL}
 Ora abbiamo gli schemi logici del Data Mart e dobbiamo creare la struttura fisica, la prima cosa da fare è progettare l'ETL. Questa si tratta della fase più lunga e complessa. In questo caso infatti bisogna scrivere del software. Ci sono processi che sono identici indipendentemente dal progetto, ma ci sono anche parti estremamente variabili.
 
-Una volta che abbiamo l'ODS l'ETL va progettato in due fasi:
+\noindent Una volta che abbiamo l'ODS, l'ETL va progettato in due fasi:
 \begin{itemize}
 	\item \textbf{Dalle sorgenti operazionali all'ODS};
 	\item \textbf{Dall'ODS al Data Mart};
@@ -30,8 +30,7 @@ I dati vengono estratti dalle sorgenti e finiscono dentro la Staging Area, un'ar
 	\item \textbf{Storicizzata}: Si vuole tenere traccia di tutte le modifiche che sono avvenute nel tempo. Per farlo di solito è sufficiente  aggiungere una colonna data di tipo timestamp.
 	\item \textbf{Semi-storicizzata}: Viene tenuta traccia solo di un numero fisso di stati precedenti (ad esempio mantengo solo le ultime 3 password utilizzate da un utente). Questo in pratica può essere realizzato aggiungendo un certo numero di campi anziché uno solo (es: invece di \textit{hash\_password} il record contiene \textit{hash\_password} e \textit{hash\_password\_precedente}).
 \end{itemize}
-
-Come riferimento abbiamo questa architettura:\newline
+\noindent Come riferimento abbiamo questa architettura:\newline
 Una sorgente gestita da un DBMS. Sopra ci sarà una logica aplicativa che si appoggia su una API comune. In azzurro ho una tabella della Staging Area in cui voglio scaricare tutte le modifiche. Quando si estrae incrementalmente, lì finiscono i record cambiati nell'ultimo intervallo dell'ETL in modo che possano essere elaborati.
 \centeredImage{img/etlextractionarch.png}{Architettura di riferimento per l'estrazione dati}{0.4}
 
@@ -42,11 +41,11 @@ Si tratta di una tecnica di estrazione immediata. Si modifica la logica applicat
 
 \paragraph{Estrazione basata su log}
 Si tratta di una tecnica di estrazione ritardata. Per ogni operazione che viene effettuata il DBMS crea dei file di log per tenerne traccia. A questo punto è sufficiente, quando lanciamo l'ETL, recuperare il log e interpretando il log si riesce a costruire una catena di cambiamenti intercorsi. In teoria è facile, in pratica anche questo metodo in pratica è un incubo. Il DBMS nei log scrive moltisisme informazioni. Riuscire ad estrarre le parti utili è un'operazione estremamente complessa. Capita però che il vendor del DBMS fornisce anche un modulo per interpretare i log.
-\centeredImage{img/etlextractionarch.png}{Architettura di riferimento per l'estrazione dati}{0.4}
+\centeredImage{img/logbase.png}{Estrazione basata su log}{0.4}
 
 \paragraph{Estrazione basata su trigger}
 Si tratta di una tecnica di estrazione immediata. I trigger sono procedure supportate da qualsiasi DBMS. Queste procedure vengono agganciate a particolari istruzioni su particolari tabelle o colonne di tabelle. Quando accade un evento (es: inserimento di un nuovo record), se è vera una certa condizione, allora avviene una certa azione (una vera e propria procedura che è possibile scrivere).
-\noindent Quindi è possibile abbinare ad ogni tabella un trigger. Quando una riga di una tabella viene modificata, la riga viene riscritta anche dentro la staging area. Il problema in questo caso ricade sia sul fatto che bisogna scrivere tanti trigger, a volte anche diversi tra loro. Inoltre c'è un problema di prestazioni. Il DBMS per ogni operazione che comie deve capire se ci sono trigger la lanciare e quali. Molta potenza viene quindi utilizzata per fare monitoraggio completo della situazione. Avere ritardi sui DB operazionali non è il massimo. Questa soluzione non è perfetta.
+\noindent Quindi è possibile abbinare ad ogni tabella un trigger. Quando una riga di una tabella viene modificata, la riga viene riscritta anche dentro la staging area. Il problema in questo caso ricade sia sul fatto che bisogna scrivere tanti trigger, a volte anche diversi tra loro. Inoltre c'è un problema di prestazioni. Il DBMS per ogni operazione che compie deve capire se ci sono trigger la lanciare e quali. Molta potenza viene quindi utilizzata per fare monitoraggio completo della situazione. Avere ritardi sui DB operazionali non è il massimo. Questa soluzione non è perfetta.
 \centeredImage{img/trigger.png}{Estrazione basata su trigger}{0.4}
 
 \paragraph{Estrazione basata su marche temporali}
@@ -56,7 +55,7 @@ Si tratta di una tecnica di estrazione ritardata. Se nel DB operazionale per ogn
 \end{warn}
 \centeredImage{img/temporal.png}{Estrazione basata su marche temporali}{0.5}
 
-\subsection{Risulti dell'estrazione}
+\subsection{Risultati dell'estrazione}
 Indipendentemente dalla tecnica utilizzata, il risultato della fase di estrazione consiste nell'insieme di record della sorgente che sono stati modificati, aggiunti o cancellati. A ogni record viene associato il tipo di operazione che ha generato la variazione (INSERT, UPDATE, DELETE).
 \centeredImage{img/changes.png}{Tabella dei cambiamenti}{0.6}
 
@@ -79,12 +78,11 @@ I dati vengono quindi caricati nella Staging Area. In questo momento i dati devo
 	\item \textbf{Inconsistenze tra valori e descrizioni};
 	\item \textbf{Inconsistenze tra valori di campi correlati}: Ad esempio il codice fiscale non combacia con il luogo di nascita;
 \end{itemize}
-
-Ogni problema richiede una tecnica specifica per la soluzione. Il corso di Sistemi Informativi ha già approfondito questi aspetti, quindi qua vengono solo riassunti:
+\noindent Ogni problema richiede una tecnica specifica per la soluzione. Il corso di Sistemi Informativi ha già approfondito questi aspetti, quindi qua vengono solo riassunti:
 
 \begin{itemize}
 	\item \textbf{Tecniche basate su dizionari}: si utilizzano tabelle di look-up per identificare ed eliminare sinonimi e abbreviazioni. Sono utilizzabili solo quando il dominio dell'attributo è conosciuto e limitato. In compenso sono utili per errori di battitura e discrepanze di formato;
-	\item \textbf{Tecniche ad hoc}: ogni dominio applicativo ha regole proprie, troppo specifiche per essere verificate tramite strumenti standard.Ad esempio per equazioni (es: \textit{profitto = guadagno - spese});
+	\item \textbf{Tecniche ad hoc}: ogni dominio applicativo ha regole proprie, troppo specifiche per essere verificate tramite strumenti standard. Ad esempio per equazioni (es: \textit{profitto = guadagno - spese});
 	\item \textbf{Tecniche di fusione approssimata}: permettono di identificare record corrispondenti in assenza di identificatori comuni grazie ad esempio a Join approssimati.
 \end{itemize}
 
