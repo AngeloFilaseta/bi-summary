@@ -52,31 +52,38 @@ In fase progettuale è possibile creare delle viste, ovvero delle fact table che
 \noindent Nell'esempio riportato sopra, $v_1$ rappresenta la vista con il livello di aggregazione più fine possibile. Da $v_1$ si può passare a $v_2$ aggregando su negozio, e così via. Cosa rappresentano gli archi? Perché tra $v_2$ e $v_3$ non c'è un arco?\newline
 L'arco rappresenta uno step di aggregazione, da $v_2$ non si può passare a $v_3$ perché hanno un diverso livello di aggregazione su dimensioni diverse. La struttura dati utilizzata per rappresentare le diverse viste in diversi livelli di aggregazione è chiamata reticolo.\newline\newline
 I dati a livello $v_1$ sono sicuramente presenti perché la vista è rappresentata dai dati al livello più fine possibile. Il progettista può decidere di materializzare delle viste, per esempio in questo caso possiamo provare a materializzare $v_4$ e $v_3$.\newline
-In questo modo nello storage (fisico) abbiamo i dati aggregati in tre modi diversi, a seconda delle viste che abbiamo scelto.\newline\newline
-\textbf{Se a questo punto l'utente lancia una query "group by $v_2$" su quali tabelle può essere eseguita?}\newline Solo su $v_1$.
-\textbf{Se l'utente lancia una query "group by $v_3$" su quali tabelle può essere eseguita?}\newline Solo su $v_1$ e $v_3$, ma è più furbo farlo su $v_3$.
-\textbf{Se l'utente lancia una query "group by $v_5$" su quali tabelle può essere eseguita?}\newline Su tutte e 3, tra queste tre la migliore da scegliere è la più piccola tra le due, perché ha meno righe.\newline\newline
+In questo modo nello storage (fisico) abbiamo i dati aggregati in tre modi diversi, a seconda delle viste che abbiamo scelto.
+\begin{question}[Se a questo punto l'utente lancia una query "group by $v_2$" su quali tabelle può essere eseguita?]
+	Solo su $v_1$.
+\end{question}
+
+\begin{question}[Se l'utente lancia una query "group by $v_3$" su quali tabelle può essere eseguita?]
+	Solo su $v_1$ e $v_3$, ma è più furbo farlo su $v_3$.
+\end{question}
+
+\begin{question}[Se l'utente lancia una query "group by $v_5$" su quali tabelle può essere eseguita?]
+	Su tutte e 3, tra queste tre la migliore da scegliere è la più piccola tra le due, perché ha meno righe.
+\end{question}
+
 Le viste sono tante quanti sono i group-by-set.
 \centeredImage{img/viste2.png}{Reticolo multidimensionale - tutte le possibili viste}{0.7}
-\noindent La vista più in alto in questo reticolo multidimensionale rappresenta il livello più fine possibile, ovvero l'insieme delle dimensioni, mentre nell'ultimo ho sempre il group-by vuoto, in mezzo ho tutti gli altri.\newline
+\noindent La vista più in alto in questo reticolo multidimensionale rappresenta il livello più fine possibile, ovvero l'insieme delle dimensioni, mentre nell'ultimo ho sempre il group-by vuoto, in mezzo ho tutti gli altri.
 \begin{warn}
 	Nei compiti può capitare che venga richiesto di disegnare un reticolo multidimensionale.
 \end{warn}
 Se decido di materializzare una vista, posso lanciare query sulla tabella relativa a quella stessa vista, ma posso anche partire da quella per arrivare a tutte le viste che stanno sotto, effettuando qualche passo di aggregazione in più.\newline
 L'utilità del reticolo permette infatti di vedere per quali group-by è utilizzabile una vista.\newline
 Se scegliamo di materializzare viste che stanno più in alto occuperremo anche più spazio, ma possiamo utilizzarle più spesso. Scegliendo una vista che sta in basso occuperemo molto meno spazio, ma la useremo anche molte meno volte.\newline
-Si sconsiglia quindi di creare viste alla cieca, perché non si può sapere a priori  quali verranno utilizzate e quanto. Bisognerebbe sempre almeno farsi un'idea del carico di lavoro, e in funzione delle esigenze si scelgono i group-by-set più utilizzati, materializzando proprio quelle viste.\newline
+Si sconsiglia quindi di creare viste alla cieca, perché non si può sapere a priori quali verranno utilizzate e quanto. Bisognerebbe sempre almeno farsi un'idea del carico di lavoro, e in funzione delle esigenze si scelgono i group-by-set più utilizzati, materializzando proprio quelle viste.
 \subsubsection{Problemi con le viste}
 Lavorando con viste aggregate possono nascere dei problemi:
 \begin{itemize}
-	\item \textbf{Misure Derivate}:
-	\centeredImage{img/viste_problemi.png}{Viste - Problemi con le misure derivate}{0.6}
-	In questo caso, senza livelli di aggregazione l'incasso è calcolabile al volo con una semplice formula, non c'è bisogno di materializzare la colonna incasso perché a partire dalle colonne esistenti è sempre possibile ottenere un valore corretto.\newline
+	\item \textbf{Misure Derivate}: In questo caso, senza livelli di aggregazione l'incasso è calcolabile al volo con una semplice formula, non c'è bisogno di materializzare la colonna incasso perché a partire dalle colonne esistenti è sempre possibile ottenere un valore corretto.\newline
 	Aggregando su \textit{Tipo} le quantità vengono sommate e il prezzo viene riformulato con la media di tutti i prezzi dei prodotti di quel tipo. Ora, potrebbe capitare, come nel caso in esame che utilizzando la stessa formula utilizzata nella vista non aggregata i conti non tornino. Questo accade perché il prezzo medio è calcolato in funzione dei prezzi dei singoli prodotti, le cui quantità possono essere diverse.\newline
 	In questi casi non è più possibile calcolare \textit{Incasso} al volo, è necessario aggiungere preventivamente la colonna quando si calcola la vista, altrimenti risulterà impossibile a partire dai dati aggregati ottenere valori corretti.
-	\item \textbf{Misure di supporto}:
+	\centeredImage{img/viste_problemi.png}{Viste - Problemi con le misure derivate}{0.6}
+	\item \textbf{Misure di supporto}: Esistono casi in cui l'aggregazione sul tempo potrebbe portare problemi, per esempio in questo caso con delle misure di livello. Calcolando i valori medi aggregando su un trimestre i valori medi che otteniamo sono quelli giusti, ma il valore medio totale non lo è. In questo caso il problema è che la media delle medie non restituisce il valore medio corretto. Per farlo, la media dovrebbe essere pesata. Proprio per questo motivo è necessario introdurre una colonna COUNT, che specifica da quanti elementi è stato ottenuto ogni valore medio. In questo modo è possibile pesare le medie parziali per ottenere un valore medio totale corretto anche a partire dalla vista aggregata.
 	\centeredImage{img/support.png}{Viste - Misure di supporto}{0.6}
-	Esistono casi in cui l'aggregazione sul tempo potrebbe portare problemi, per esempio in questo caso con delle misure di livello. Calcolando i valori medi aggregando su un trimestre i valori medi che otteniamo sono quelli giusti, ma il valore medio totale non lo è. In questo caso il problema è che la media delle medie non restituisce il valore medio corretto. Per farlo, la media dovrebbe essere pesata. Proprio per questo motivo è necessario introdurre una colonna COUNT, che specifica da quanti elementi è stato ottenuto ogni valore medio. In questo modo è possibile pesare le medie parziali per ottenere un valore medio totale corretto anche a partire dalla vista aggregata.
 \end{itemize}
 \subsubsection{Classificazione degli operatori di supporto}
 I problemi sulle viste sono a causa degli operatori di aggregazioni utilizzati:
@@ -117,7 +124,7 @@ L'\textbf{Aggregate Navigator} è un componente che data la richiesta dell'utent
 Anche nelle gerarchie e quindi nelle $DT$ in realtà c'è dinamicità (slowly changing dimension), anche se non come ai livelli degli eventi. La dinamicità sulle gerarchie va comunque gestita.
 Gli scenari temporali sono i possibili scenari che l'utente può specificare quando pone un'interrogazione:
 \begin{itemize}
-	\item \textbf{Oggi per ieri (attualizzazione)}: L'idea è attualizzare tutti i da ti delle gerarchie ai dati che abbiamo oggi. Sostanzialmente ci dimentichiamo del passato dando importanza solo alla forma delle gerarchie nel presente. Per mantenere questa soluzione si mantiene un schema a stella ma si aggiunge un accorgimento sull'ETL.
+	\item \textbf{Oggi per ieri (attualizzazione)}: L'idea è attualizzare tutti i dati delle gerarchie ai dati che abbiamo oggi. Sostanzialmente ci dimentichiamo del passato dando importanza solo alla forma delle gerarchie nel presente. Per mantenere questa soluzione si mantiene un schema a stella ma si aggiunge un accorgimento sull'ETL.
 	\item \textbf{Oggi o ieri (verità storica)}: I dati vengono interpretate in base alla verità storica, ovvero alla forma che le gerarchie avevano nel momento della storia che stiamo analizzando. Implementabile sullo schema a stella aggiungendo righe alle $DT$.
 	\item \textbf{Ieri per oggi (retrodatazione)}: In un certo senso è l'opposto dell'attualizzazione, riportiamo le gerarchie ad uno stato passato. Richiede una storicizzazione dei dati e quindi l'aggiunta di colonne negli schemi.
 \end{itemize}
@@ -130,7 +137,7 @@ Nel seguente esempio viene rappresentata una $DT$ dei negozi.
 \centeredImage{img/veritàexample.png}{Esempio di verità storica}{0.65}
 \noindent In questo caso ogni evento viene messo in corrispondenza con la versione di negozio che era vera in quell'istante temporale. In questo caso. Per gli eventi da Luglio in poi non cambia nulla rispetto a prima, ma gli eventi pre-Luglio vengono correttamente associati al responsabile del tempo. In questo caso specifico questa soluzione è la più corretta, ma non sempre sarà così.
 \centeredImage{img/retroexample.png}{Esempio di retrodatazione}{0.65}
-\noindent Utilizzando la retrodatazione fissiamo una data, per esempio 25 Giugno. A questo punto capiamo quali sono i record della $DT$ da considerare e associamo gli eventi a quei record.\newline\newline
+\noindent Utilizzando la retrodatazione fissiamo una data, per esempio 25 Giugno. A questo punto capiamo quali sono i record della $DT$ da considerare e associamo gli eventi a quei record.
 \subsection{Gerarchie Dinamiche}
 \begin{warn}[Consiglio di Rizzi]
 	Questo è un punto in cui tendiamo a fare confusione all'esame. Ogni volta che Rizzi mette domande su gerarchie temporali noi tendiamo a confondere gli scenari temporali con le soluzioni di tipo 1, 2 e 3 che vengono presentate ora. Si tratta di aspetti differenti anche se collegati tra loro. Gli scenari temporali rappresentano un desiderio dell'utente di aggregare e analizzare i dati in un certo modo in base al tempo. Queste invece sono soluzioni di progettazione ad un livello logico, qui siamo ad un livello più tecnologico.
@@ -152,10 +159,8 @@ Nel seguente esempio viene rappresentata una $DT$ dei negozi.
 		\item \textbf{Verità Storica}: Nessuna analisi di marca temporale richiesta. Tutto funziona nel modo corretto: effettuando un join a stella otteniamo direttamente la verità storica.
 	\end{itemize}
 \end{itemize}
-
-Nella progettazione concettuale l'input è lo schema concettuale, lo scopo è ottenere in output lo schema logico relazione. I principi che useremo saranno diversi e spesso in contrasto con le classiche architetture utilizzate nei sistemi operazionali, ad esempio la ridondanza e la denormalizzazione.
-
-I passi da svolgere per la progettazione logica sono i seguenti:
+\subsection{Passi di progettazione logica}
+\noindent Nella progettazione concettuale l'input è lo schema concettuale, lo scopo è ottenere in output lo schema logico. I principi che useremo saranno diversi e spesso in contrasto con le classiche architetture utilizzate nei sistemi operazionali, ad esempio la ridondanza e la denormalizzazione. I passi da svolgere per la progettazione logica sono i seguenti:
 \begin{itemize}
 	\item \textbf{Scelta dello schema logico da utilizzare (star/snowflake)};
 	\item \textbf{Traduzione degli schemi concettuali} ;
@@ -163,7 +168,7 @@ I passi da svolgere per la progettazione logica sono i seguenti:
 	\item \textbf{Applicazione di altre forme di ottimizzazione (frammentazione verticale/orizzontale)}.
 \end{itemize}
 
-\subsection{Star VS Snowflake}
+\subsubsection{Star VS Snowflake}
 Esistono pareri contrastanti sull'utilità dello snowflaking.
 \begin{itemize}
 	\item La filosofia del Data Warehouse viene meno;
@@ -196,14 +201,15 @@ La scelta dipende fortemente anche dalla filosofia dei progettisti.
 	\centeredImage{img/aggiornamentisf.png}{Aggiornamenti frequenti - Quando fare snowflaking?}{0.4}
 \end{itemize}
 
-\subsection{Dagli schemi di fatto agli schemi a stella}
+\subsubsection{Dagli schemi di fatto agli schemi a stella}
 La regola di base per la traduzione di uno schema di fatto in uno a stella prevede di creare una Fact Table contenente tutte le misure e gli attributi descrittivi direttamente collegati con il fatto, e per ogni gerarchia creare una $DT$ che ne contiene tutti gli attributi.\newline
 In aggiunta occorre però effettuare una trattazione approfondita dei costrutti avanzati del DFM.
-\subsubsection{Attributi descrittivi}
+
+\paragraph{Attributi descrittivi}
 Nessun impatto significativo. Gli attributi descrittivi finiscono nella $DT$ che contiene l'attributo a cui esso è collegato. Se invece è collegato al fatto allora finisce dentro la Fact Table.
-\subsubsection{Archi opzionali}
+\paragraph{Archi opzionali}
 Nessun impatto significativo. Nella $DT$ finisce un valore fittizio (come NULL, anche se si utilizzano più spesso stringhe fittizie) nelle righe in cui non è definito alcun valore.
-\subsubsection{Gerarchie condivise}
+\paragraph{Gerarchie condivise}
 \begin{itemize}
 	\item Se una gerarchia si presenta più volte nello stesso fatto non è conveniente introdurre due copie ridondanti delle relative dimension table (come da immagine).
 	\centeredImage{img/gercondtostar.png}{Gerarchie condivise - Da fatto a Star}{0.6}
@@ -214,12 +220,12 @@ Nessun impatto significativo. Nella $DT$ finisce un valore fittizio (come NULL, 
 	\end{itemize}
 	\centeredImage{img/gercondstar.png}{Gerarchie condivise - Da gerarchia a Star}{0.6}
 \end{itemize}
-\subsubsection{Convergenza}
+\paragraph{Convergenza}
 Nessun impatto significativo. Tutti gli attributi che fanno parte della convergenza stanno sulla stessa $DT$ del loro padre.
 \begin{info}
 	In questo caso la presenza di un costrutto di convergenza è denotato nei metadati. Nei metadati sono infatti specificate tutte le relazioni tra gli attributi, tra cui anche il fatto che ci sono due figli legati allo stesso padre, e quindi una convergenza. Poi lo strumento quando farà i suoi roll-up e i suoi drill-down ne terrà conto.
 \end{info}
-\subsubsection{Attributi cross-dimensionali}
+\paragraph{Attributi cross-dimensionali}
 Primo impatto forte sullo schema a stella. Creando un attributo cross-dimensionale inseriamo una dipendenza funzionale composta, nel caso che segue $ categoria, stato \xrightarrow{} IVA$.
 Tra categoria e stato c'è anche un legame molti a molti. Dobbiamo quindi necessariamente creare una nuova tabella nello schema a stella, che prende il nome di Bridge Table. La chiave primaria è formata dai due attributi che determinano l'attributo cross-dimensionale.
 \begin{warn}
@@ -230,21 +236,21 @@ Se volessimo a tutti i costi una foreign key dovremmo fare snowflaking:\newline\
 IVA(id\_stato: STATO, id\_categoria, iva)\newline
 NEGOZI(id\_negozio, negozio, città, id\_stato: STATO)\newline
 STATO(id\_stato, stato)\newline
-\subsubsection{Archi multipli}
-Anche in questo caso aggiungiamo una Bridge Table. ANche in questo caso la chiave della tabella Bridge è la composizione degli attributi collegati all'arco multiplo.\newline
+\paragraph{Archi multipli}
+Anche in questo caso aggiungiamo una Bridge Table. Anche in questo caso la chiave della tabella Bridge è la composizione degli attributi collegati all'arco multiplo.\newline
 In questo caso però i due attributi sono anche chiavi esterne. Per non perdere la sommarizzabilità, abbiamo anche bisogno di inserire il peso all'interno della Bridge.
 \centeredImage{img/archimultiplistar.png}{Archi multipli - Progettazione Logica}{0.6}
 \centeredImage{img/istranzearcomultiplologico.png}{Archi multipli - Progettazione Logica - Esempio di istanze}{0.6}
-A causa dell'aggiunta della Bridge Table dovremo pagare dei Join in più. Questa soluzione rende possibili due tipi di interrogazioni:
+\noindent A causa dell'aggiunta della Bridge Table dovremo pagare dei Join in più. Questa soluzione rende possibili due tipi di interrogazioni:
 \begin{itemize}
 	\item \textbf{Interrogazioni pesate}: considerano il peso dell'arco multiplo e forniscono pertanto l'effettivo totale. Ha senso nel cao in cui per esempio dobbiamo calcolare gli incassi.
 	\item \textbf{Interrogazioni con impatto}: non considerano il peso, forniscono quindi valori più elevati.
 \end{itemize}
-Nel caso in cui si voglia mantenere lo schema a stella pulito è necessario rendere più fine la granularità del fatto, modellando l'arco multiplo direttamente nella Fact Table (operazione di push-down).
+\noindent Nel caso in cui si voglia mantenere lo schema a stella pulito è necessario rendere più fine la granularità del fatto, modellando l'arco multiplo direttamente nella Fact Table (operazione di push-down).
 \centeredImage{img/multiploproblem.png}{Archi multipli - Progettazione Logica - Soluzione push-down}{0.45}
-Il problema di questa soluzione è che per ogni accoppiata libro-autore viene creata una nuova riga nella Fact Table, con conseguente spreco di spazio. Inoltre l'attributo di pesatura sparisce in quanto i dati vengono inseriti già blindando la regola di pesatura nei dati, rendendo molto difficile formulare interrogazioni.\newline
+\noindent Il problema di questa soluzione è che per ogni accoppiata libro-autore viene creata una nuova riga nella Fact Table, con conseguente spreco di spazio. Inoltre l'attributo di pesatura sparisce in quanto i dati vengono inseriti già blindando la regola di pesatura nei dati, rendendo molto difficile formulare interrogazioni.\newline
 Questa soluzione quindi non viene praticamente mai usata in quanto è poco corretta.
-\subsubsection{Dimensioni degeneri}
+\paragraph{Dimensioni degeneri}
 Indica una dimensione la cui gerarchia contiene un solo attributo. Se la lunghezza dell'attributo non è particolarmente eccessiva si può valutare di inserire il valore direttamente in Fact Table. Prendiamo in considerazione il DFM che segue:
 \centeredImage{img/degeneridfm.png}{Dimensioni degeneri - DFM di esempio}{0.45}
 \noindent In questo caso si potrebbe optare per una soluzione classica, adottando tre $DT$:\newline\newline
@@ -257,9 +263,9 @@ FT(\underline{codice\_ritorno}, \underline{modalità\_spedizione}, \underline{st
 Il difetto di questa soluzione è che la Fact Table occuperà più spazio e alcuni dati saranno ridondanti.\newline
 Esiste però una soluzione intermedia, ovvero quella di utilizzare una Junk Dimension, ovvero una unica tabella per tutte le dimension degeneri.
 \centeredImage{img/junkdimension.png}{Junk Dimension}{0.45}
-Utilizzando questa soluzione manteniamo tutte le dimensioni degeneri all'interno di un unica tabella, risparmiando sul numero di join da effettuare. Anche dal punto di vista dello spazio sulla Fact Table risparmiamo molti record. Lo svantaggio di questa soluzione è che all'interno della Junk Dimension finiscono attributi che sono tra loro in associazioni molti a molti, quindi potrebbe esserci una forte occupazione di spazio sulla $DT$, dovuta a tutte le possibili combinazioni di valori possibili. Questa soluzione resta molto interessante, ma bisognerebbe utilizzarla solo quando le cardinalità delle dimensioni degeneri non sono troppe elevate perché la cardinalità della tabella cresce esponenzialmente, o quando le regole di business impediscono moltissime combinazioni degli attributi. Inoltre c'è un ulteriore livello di flessibilità, perché può essere che alcuni record sulla Junk siano utilizzato molto più spesso di altri.
-\subsubsection{Gerarchie incomplete}
-Dal punto di vista dello schema non ci sono variazioni, si mantiene uno schema a stella, ma bisogna trovare un modo per gestire in buchi. Ci sono diversi modi ma nessuno funziona meglio degli altri.
+\noindent Utilizzando questa soluzione manteniamo tutte le dimensioni degeneri all'interno di un unica tabella, risparmiando sul numero di join da effettuare. Anche dal punto di vista dello spazio sulla Fact Table risparmiamo molti record. Lo svantaggio di questa soluzione è che all'interno della Junk Dimension finiscono attributi che sono tra loro in associazioni molti a molti, quindi potrebbe esserci una forte occupazione di spazio sulla $DT$, dovuta a tutte le possibili combinazioni di valori possibili. Questa soluzione resta molto interessante, ma bisognerebbe utilizzarla solo quando le cardinalità delle dimensioni degeneri non sono troppe elevate perché la cardinalità della tabella cresce esponenzialmente, o quando le regole di business impediscono moltissime combinazioni degli attributi. Inoltre c'è un ulteriore livello di flessibilità, perché può essere che alcuni record sulla Junk siano utilizzato molto più spesso di altri.
+\paragraph{Gerarchie incomplete}
+Dal punto di vista dello schema non ci sono variazioni, si mantiene uno schema a stella, ma bisogna trovare un modo per gestire i buchi. Ci sono diversi modi ma nessuno funziona meglio degli altri.
 \begin{itemize}
 	\item \textbf{Bilanciamento per esclusione}: Ogni volta che c'è un buco viene inserito un segnaposto ("altro", "non definito", etc.).
 	\centeredImage{img/bilanciamentoperesclusione.png}{Bilanciamento per Esclusione}{0.55}
@@ -293,26 +299,26 @@ Dal punto di vista dello schema non ci sono variazioni, si mantiene uno schema a
 	\end{itemize}
 \end{itemize}
 In genere sono gli utenti a sapere come vogliono visualizzare i dati e scelgono le soluzioni in base ai loro requisiti.
-\subsubsection{Gerarchie ricorsive}
+\paragraph{Gerarchie ricorsive}
 \centeredImage{img/ricorsivalogica.png}{Gerarchia Ricorsiva - Progettazione Logica}{0.75}
 Non può essere modellata attraverso uno schema a stella.
 Una possibile soluzione prevede l'utilizzo di autoanello, ovvero una specie di associazione padre figlio in cui un campo è foreign key della tabella stessa.\newline
 Il problema nasce dal fatto che SQL non è un linguaggio ricorsivo, quindi non sempre la soluzione è gestibile in modo ottimale con DBMS commerciali. In pratica le interrogazioni sono estremamente difficili se non impossibili da scrivere.\newline
-Un costrutto più potente è dato dalla \textit{Navigation Table}
+Un costrutto più potente è dato dalla \textit{Navigation Table}.
 \centeredImage{img/navigationtable.png}{Gerarchia Ricorsiva - Progettazione Logica - Navigation Table}{0.75}
-In questo caso l'albero delle dipendenze viene appiattito in una tabella. In questo modo non ci sarà più il problema della ricorsive da gestire, ma ci sarà invece un problema di spazio, infatti la gerarchia richiede un numero di righe esponenziali rispetto al numero di nodi.\newline
+\noindent In questo caso l'albero delle dipendenze viene appiattito in una tabella. In questo modo non ci sarà più il problema della ricorsive da gestire, ma ci sarà invece un problema di spazio, infatti la gerarchia richiede un numero di righe esponenziali rispetto al numero di nodi.\newline
 Servono infatti molti attributi per specificare a che livello si trova un determinato dato, se è foglia o no, e quali dipendenze ha con altri nodi.
 
 \subsection{Scelta delle viste}
 La scelta delle viste da materializzare non è semplice e richiede un trade-off tra numerosi requisiti:
 \begin{itemize}
-	\item Minimizzazione di funzioni di costo
-	\item Vincoli di sistema
+	\item \textbf{Minimizzazione di funzioni di costo};
+	\item \textbf{Vincoli di sistema}:
 	\begin{itemize}
-		\item Spazio su disco
-		\item Tempo a disposizione per l'aggiornamento dei dati
+		\item Spazio su disco;
+		\item Tempo a disposizione per l'aggiornamento dei dati.
 	\end{itemize}
-	\item Vincoli utente
+	\item \textbf{Vincoli utente}:
 	\begin{itemize}
 		\item Tempo massimo di risposta
 		\item Freschezza dei dati
@@ -320,7 +326,7 @@ La scelta delle viste da materializzare non è semplice e richiede un trade-off 
 \end{itemize}
 La scelta delle viste è un problema NP-HARD. Immaginiamo di voler coprire q1, q2 e q3. Vorremmo materializzare le viste che portano alla massimizzazione dei benefici prestazionali e di spazio. Quali viste conviene materializzare?
 \centeredImage{img/sceltaviste.png}{Scelta delle viste da materializzare}{0.45}
-Iniziamo dal dire che esistono viste che non ha proprio senso materializzare, ad esempio il figlio di q1 e q2.\newline
+\noindent Iniziamo dal dire che esistono viste che non ha proprio senso materializzare, ad esempio il figlio di q1 e q2.\newline
 Il nostro scopo inziale è scoprire quali sono le viste candidate, ovvero tutte quelle che può aver senso scegliere.\newline
 Nell'esempio le viste candidate sono quelle gialle, più il nodo centrale e il padre di q3. Tutte le altre sono da scartare perché meno efficienti di altre già scelte.\newline
 Una vista candidata è quindi la vista più bassa che permette di coprire nel modo migliore ciascuno sottoinsieme delle query del carico di lavoro.\newline
@@ -328,8 +334,8 @@ In termini qualitativi in questo caso conviene materializzare q3 e q1. Nella rea
 Per esempio non conviene materializzare una vista quando:
 \begin{itemize}
 	\item Il suo group-by-set è molto simile a quello di una vista già materializzata;
-	\item Il suo group-by-set è molto fine
-	\item La materializzazione non riduce di almeno un ordine di grandezza il costo delle interrogazioni
+	\item Il suo group-by-set è molto fine;
+	\item La materializzazione non riduce di almeno un ordine di grandezza il costo delle interrogazioni.
 \end{itemize}
 \subsection{Frammentazione delle viste}
 Si intende la suddivisione della Fact Table in più frammenti al fine di aumentare le prestazioni del sistema.
