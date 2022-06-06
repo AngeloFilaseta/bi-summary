@@ -20,13 +20,13 @@ Le schema del DB riconciliato può assumere tante forme, noi ci concentreremo su
 \subsection{Scelta dei fatti}
 I fatti sono concetti di interesse primario per il processo decisionale. Corrispondono ad eventi che accadono in modo \textbf{dinamico}, per esempio VENDITE. Archivi statici o semi statici NON sono buoni candidati (NEGOZIO, REGIONE).
 
-In uno schema E/R, un fatto corrisponde sempre o ad un'entità o ad un'associazione tra più entità. Se lo schema sorgente è relazionale, il fatto corrisponde ad una relazione.
+\noindent In uno schema E/R, un fatto corrisponde sempre o ad un'entità o ad un'associazione tra più entità. Se lo schema sorgente è relazionale, il fatto corrisponde ad una relazione.
 
 \begin{warn}[Regola euristica per scegliere il fatto:]
 	In genere un fatto sta dove ci sono attributi di tipo data, o nelle immediate circostanze.
 \end{warn}
 
-Ricordiamo che è sempre possibile reificare un'associazione e farla apparire come un'entità, creando tanto nuove relazioni tante quante erano le entità iniziali. Si creando delle associazioni binarie tra tutte le entità iniziali e quella nuova, con le cardinalità impostate a (1,1) dove mancanti (in uscita dal nuovo fatto) preservando le altre. L'identificatore è composto ed è preso in prestito da tutte le entità iniziali.
+\noindent Ricordiamo che è sempre possibile reificare un'associazione e farla apparire come un'entità, creando tanto nuove relazioni tante quante erano le entità iniziali. Si creando delle associazioni binarie tra tutte le entità iniziali e quella nuova, con le cardinalità impostate a (1,1) dove mancanti (in uscita dal nuovo fatto) preservando le altre. L'identificatore è composto ed è preso in prestito da tutte le entità iniziali.
 \begin{figure}[H]
 	\begin{center}
 		\includegraphics[width=0.6\linewidth]{img/reif.PNG}
@@ -45,10 +45,10 @@ L'albero degli attributi è un albero in cui:
 
 Le dipendenze funzionali sono di due tipi:
 \begin{itemize}
-	\item Intra-entità: Sono espresse implicitamente, focalizzandosi solo sull'entità. La chiave determina tutti gli altri attributi delle entità. Nella relazione \textit{PRODOTTO(\underline{id}, peso, data, dimensione)}, id determina peso data e dimensione.
-	\item Inter-entità: Sono espresse tra più entità, in particolare dove sono presenti cardinalità in uscita che valgono al massimo uno allora esiste una dipendenza funzionale.
+	\item \textbf{Intra-entità}: Sono espresse implicitamente, focalizzandosi solo sull'entità. La chiave determina tutti gli altri attributi delle entità. Nella relazione \textit{PRODOTTO(\underline{id}, peso, data, dimensione)}, id determina peso data e dimensione.
+	\item \textbf{Inter-entità}: Sono espresse tra più entità, in particolare dove sono presenti cardinalità in uscita che valgono al massimo uno allora esiste una dipendenza funzionale.
 \end{itemize}
-\begin{info}
+\begin{info}[Il gioco:]
 	Possiamo vedere l'algoritmo come un gioco in cui una volta scelto il fatto veniamo piazzati all'interno di una stanza che lo rappresenta. Lo scopo è esplorare quante più stanze possibili. Una volta che siamo in una stanza controlliamo ciò che abbiamo intorno (dipendenze intra-entità) e poi ci muoviamo verso un'altra stanza per poi iterare su tutte. Le porte però sono aperte solo se le relazioni in uscita hanno cardinalità (1,1). In risultato non dipende dall'ordine in cui visitiamo le stanze. Alcune passaggi potrebbero essere bloccati, non sempre è possibile obbligatorio visitare tutto lo schema. Potremmo anche entrare più volte nella stessa stanza, ma da punti diversi. In questo caso dovrebbe venirci in mente che potrebbe esserci una gerarchia condivisa o una convergenza.
 \end{info}
 
@@ -86,7 +86,7 @@ Essendo la risposta NO non abbiamo vincoli sulle istanze e quindi si tratta di g
 \end{warn}
 \subsection{Problemi in progettazione concettuale}
 \subsubsection{Attributo su relazione}
-Nel caso in cui con l'algoritmo finiamo su una relazione con un attributo come nel caso in immagine, bisogna ragionare a dipendenze funzionali. In questo caso la gravità viene attaccata a Somministrazione, perché è da essa che dipende. Questo avviene perché la relazione è di tipo 1-N quindi abbiamo istanze formate da coppie di Somministrazione e Patologia. Per ognuna ho anche una gravità, quindi ho anche delle triple. Però essendo l'associazione 1-N compare una volta sola la patologia per ogni somministrazione, quindi somministrazione $\xrightarrow{}$ gravità.
+Nel caso in cui con l'algoritmo finiamo su una relazione con un attributo come nel caso in immagine, bisogna ragionare a dipendenze funzionali. In questo caso la gravità viene attaccata a Somministrazione, perché è da essa che dipende. Questo avviene perché la relazione è di tipo 1-N quindi abbiamo istanze formate da coppie di Somministrazione e Patologia. Per ognuna ho anche una gravità, quindi ho anche delle triple. Però essendo l'associazione 1-N compare una volta sola la patologia per ogni somministrazione, quindi \textit{somministrazione} $\xrightarrow{}$ \textit{gravità}.
 \centeredImage{img/attributeonrel.png}{Attributo su relazione}{0.6}
 \subsubsection{Cicli}
 \begin{figure}[H]
@@ -159,21 +159,21 @@ Non tutti gli attributi sono d'interesse per il Data Mart. Alcuni nodi potrebber
 \end{figure}
 \noindent Le dipendenze funzionali dirette dell'albero di partenza sono:
 \newline
-a $\xrightarrow{}$ b, a $\xrightarrow{}$ c, a $\xrightarrow{}$ d, d $\xrightarrow{}$ e, d $\xrightarrow{}$ f, d $\xrightarrow{}$ g\newline
+\textit{a} $\xrightarrow{}$ \textit{b}, \textit{a} $\xrightarrow{}$ \textit{c}, \textit{a} $\xrightarrow{}$ \textit{d}, \textit{d} $\xrightarrow{}$ \textit{e}, \textit{d} $\xrightarrow{}$ \textit{f}, \textit{d} $\xrightarrow{}$ \textit{g}\newline
 Ma ce ne sono anche di transitive:\newline
-a $\xrightarrow{}$ e, a $\xrightarrow{}$ f, a $\xrightarrow{}$ g.\newline
+\textit{a} $\xrightarrow{}$ \textit{e}, \textit{a} $\xrightarrow{}$ \textit{f}, \textit{a} $\xrightarrow{}$ \textit{g}.\newline
 Come possiamo notare, le dipendenze funzionali sono tutte preservate in entrambi i casi, al massimo vengono completamente rimosse.\newline
 Se si elimina un nodo opzionale l'opzionalità è ereditata da tutti i figli.\newline
 Eliminare un figlio diretto della radice implica aggregare, e quindi avere un livello più grossolano di granularità del fatto. In questo caso si aggiunge sempre una misura al fatto, che indica il conteggio.\newline
 Altre manipolazioni sono lo spostamento di un arco intero come nel seguente caso:
 \centeredImage{img/spostamento archi.PNG}{Editing dell'albero: Spostamento archi}{0.6}
 \noindent Le dipendenze funzionali del DFM a sinistra sono:\newline
-a $\xrightarrow{}$ b, b $\xrightarrow{}$ c, a $\xrightarrow{}$ c\newline
+\textit{a} $\xrightarrow{}$ \textit{b}, \textit{b} $\xrightarrow{}$ \textit{c}, \textit{a} $\xrightarrow{}$ \textit{c}\newline
 Nello schema di destra invece:
-a $\xrightarrow{}$ b, a $\xrightarrow{}$ c\newline
+\textit{a} $\xrightarrow{}$ \textit{b}, \textit{a} $\xrightarrow{}$ \textit{c}\newline
 Passare da una gerarchia profonda ad una gerarchia larga significa rimuovere dipendenze funzionali. Viceversa passare da una gerarchia larga ad una gerarchia profonda significa aggiungere dipendenze funzionali.
 \begin{warn}[Per esame:]
-	Nei compiti a volte si dice di normalizzare lo schema sorgente se non lo è. Un approccio potrebbe essere farlo all'inizio, ma è un metodo lento e error-prone. Molto più pratico è svolgere normalmente l'esercizio ed applicare/rimuovere le dipendenze funzionali attraverso il metodo appena illustrato.
+	Nei compiti a volte si dice di normalizzare lo schema sorgente se non lo è. Un approccio potrebbe essere farlo all'inizio, ma è un metodo lento e che porta facilmente ad errori. Molto più pratico è svolgere normalmente l'esercizio ed applicare/rimuovere le dipendenze funzionali attraverso il metodo appena illustrato.
 \end{warn}
 A volte possono essere presenti associazioni uno a uno (si tratta di un caso particolare di una molti a molti). Esempio di una relazione:\newline
 R(\underline{kr}, a)\newline
@@ -185,7 +185,7 @@ S(\underline{kr}: R, b)\newline
 	\item Facendo un innesto, ovvero rimuovendo l'associazione uno ad uno. In questo caso i figli si attaccano al livello in cui era l'attributo eliminato.
 	\item Effettuare uno swap. Esistono alcuni casi in cui la chiave utilizzato è un surrogato. Se esiste un attributo che può prendere le veci della chiave allora i due attributi dipendono l'uno dall'altro e quindi si possono scambiare. Questo rende anche possibile eliminare il surrogato.
 \end{itemize}
-\begin{warn}[]
+\begin{warn}
 	In uno schema relazionale anche se la strada sembra chiusa in un verso in una relazione uno a uno in realtà non lo è, solo che entrando da un verso l'arco è normale, entrando dal verso opposto l'arco è opzionale. Vedi esempio dei voli.
 \end{warn}
 \subsection{Scelta delle dimensioni}
