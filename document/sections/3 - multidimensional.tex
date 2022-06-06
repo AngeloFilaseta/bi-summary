@@ -1,50 +1,45 @@
 
 \section{Modello Multidimensionale}
-Si tratta del modello utilizzato per la rappresentazione e l'interrogazione dei dati nei Data Warehouse.\newline
-
-I \textbf{fatti} di interesse sono rappresentati in \textbf{cubi}.
-
+\subsection{Introduzione}
+Il Modello Multidimensionale è il modello utilizzato per la rappresentazione e l'interrogazione dei dati nei Data Warehouse. La struttura dati è facilmente immaginabile come un cubo nel caso in cui ci siano 3 dimensioni.
 \begin{itemize}
-	\item Fatto: Evento che accade, di interesse per l'azienda, da monitorare. Un concetto di interesse per il processo decisionale. Tipicamente modella un insieme di eventi che accadono (vendite, spedizioni...). I fatti sono estremamente dinamici ed evolvono nel tempo.
-	\item Misura: Attributo numerico che quantifica un fatto da diversi punti di vista di interesse per l'analisi.
-	\item Dimensione: Asse multidimensionale utilizzato per localizzare ed analizzare le occorrenze di un evento. Un asse per esempio possono essere studenti, date, etc.
-	\item Gerarchia: Una sequenza di attributi collegati tra loro da dipendenze funzionali (A => B).
+	\item \textbf{Fatto}: Evento di interesse per l'azienda che accade e che si desidera monitorare. Un concetto di interesse per il processo decisionale. Tipicamente modella un insieme di eventi che accadono (vendite, spedizioni...). I fatti sono estremamente dinamici ed evolvono nel tempo.
+	\item \textbf{Misura}: Attributo numerico che quantifica un fatto da diversi punti di vista di interesse per l'analisi.
+	\item \textbf{Dimensione}: Asse multidimensionale utilizzato per localizzare ed analizzare le occorrenze di un evento. Esempi di dimensioni possono essere date, negozi etc.
+	\item \textbf{Gerarchia}: Una sequenza di attributi collegati tra loro da dipendenze funzionali (A => B).
 	A e B sono insiemi di attributi. Dire che A determina B significa che ciascun valore di A è sempre legato allo stesso valore di B.
 	Una gerarchia per esempio è Prodotto => Tipo => Categoria.
 	Più generalmente si tratta di una sequenza di attributi che descrivono a via via livelli più approssimati una dimensione e sono collegati tra loro tramite una associazione molti a uno.
 \end{itemize}
-
-Nella realtà le dimensioni non sono al massimo 3, possono essere n. Si può lavorare con molte dimensione, ogni incrocio con le altre dimensioni contiene una misura, ovvero un numero. Si può fare un parallelismo con Excel quando le dimensioni sono 2.\newline
-Per esempio in un cubo in cui ci sono tre dimensioni: data, prodotto e negozio ogni cella indica un record relativo al prodotto venduto in un certo punto vendita in una determinata data. Il record può essere strutturato in diversi modo, può anche contenere una sola misura per esempio la quantità di prodotti venduti.\newline
+\noindent Nella realtà le dimensioni non sono al massimo 3, possono essere n. Si può lavorare con molte dimensione, ogni incrocio con le altre dimensioni contiene una misura, ovvero un numero. Si può fare un parallelismo con Excel quando le dimensioni sono 2.\newline
+Per esempio in un cubo in cui ci sono tre dimensioni: data, prodotto e negozio ogni cella indica un record relativo al prodotto venduto in un certo punto vendita in una determinata data. Il record può essere strutturato in diversi modi, può anche contenere una sola misura per esempio la quantità di prodotti venduti.\newline
 I cubi sono intrinsecamente sparsi.\newline
-
-\subsection{Slicing and Dicing}
+\subsection{Operazioni sul cubo}
+\subsubsection{Slicing and Dicing}
 \begin{itemize}
-	\item \textit{Slicing}: significa, dato un cubo, selezionare un solo valore su una dimensione. Si possono effettuare più slicing su un cubo e mano a mano la dimensionalità del cubo decresce. Uno slicing sulla data è per esempio considerare solo l'asse che passa per la data 22/02/22.
-	\item \textit{Dicing}: significa selezionare un sottoinsieme del cubo, quindi selezionando NON un solo valore ma aggregando sulle dimensioni, anche per più valori, per esempio selezionando un intero anno anziché un solo giorno sull'asse delle date.
+	\item \textbf{Slicing}: significa, dato un cubo, selezionare un solo valore su una dimensione. Si possono effettuare più slicing su un cubo e mano a mano la dimensionalità del cubo decresce. Uno slicing sulla data è per esempio considerare solo l'asse che passa per la data 22/02/22.
+	\item \textbf{Dicing}: significa selezionare un sottoinsieme del cubo, quindi selezionando NON un solo valore ma aggregando sulle dimensioni, anche per più valori, per esempio selezionando un intero anno anziché un solo giorno sull'asse delle date.
 \end{itemize}
-Slicing e Dicing si possono paragonare alla clausola SQL "WHERE".
-
-\subsection{Aggregazione}
-L'aggregazione è un'operazione trasforma un cubo di partenza in un nuovo cubo, più aggregato appunto. Alcuni livelli di dettaglio vengono persi, per esempio in una situazione in cui Prodotto => Tipo => Categoria, si possono aggregare i Prodotti in Tipi.\newline
+\noindent Slicing e Dicing si possono paragonare alla clausola SQL "WHERE".
+\subsubsection{Aggregazione}
+L'aggregazione è un'operazione trasforma un cubo di partenza in un nuovo cubo che sarà per l'appunto più aggregato. Alcuni livelli di dettaglio vengono persi, per esempio in una situazione in cui Prodotto => Tipo => Categoria, si possono aggregare i Prodotti in Tipi.\newline
 Aggregando la sparsità diminuisce.
 I dati possono essere aggregati in diversi modo, per esempio utilizzando la somma (es: la quantità di prodotti venduti), anche se non è sempre possibile.
+\subsubsection{Operatori OLAP}
+
+\begin{itemize}
+	\item \textbf{roll-up}: Roll-up significa sostanzialmente arrotolare. Quelli che fa l'operatore di roll-up è sostanzialmente aggregare su una dimensione.
+	\item \textbf{drill-down}: L'opposto del roll-up, da un cubo più aggregato si passa ad un cubo più dettagliato. L'operatore drill-down disaggrega i dati. La sparsità tenderà ad aumentare. Si può anche completamente aggiungere una nuova dimensione non presente.
+	\item \textbf{slice-and-dice}: Essendo le operazioni di slicing e dicing piuttosto simili (sempre di clausole WHERE si tratta) le due operazioni sono compatatte in un unico operatore OLAP.
+	\item \textbf{pivoting}: Non altera i dati ma li risistema, per esempio spostando un dato in colonna in riga o viceversa. Si tratta di un'operatore puramente estetico.
+	\item \textbf{drill-across}: Si tratta di un operatore che mette insieme due cubi differenti, effettuando quello che in SQL sarebbe una specie di operatore JOIN.
+\end{itemize}
 
 \subsection{Tecniche di Analisi dei dati}
 Alla fine dei procedimenti di pulizia e trasformazione occorre capire come trarre vantaggio informativo.
 Ci sono due approcci:
 \begin{itemize}
-	\item \textit{Reportistica}: conoscenze informatiche non richieste. Orientato agli utenti, legato ad operazioni che vengono svolte periodicamente. Le query sono pre-identificate nella fase di analisi dei requisiti e vengono congelate nella logica applicativa degli utenti. Non è possibile interagire con il risultato una volta che viene visualizzato, in quanto è statico. I risultati sono spesso corredati da grafici di vari tipi.
-	\item \textit{OLAP}: richiede all'utente di saper utilizzare la UI del software utilizzato e di saper ragionare in modo multidimensionale. Le necessità degli utenti non sono prevedibili ed è necessario essere il più flessibili possibili. Per effettuare un'analisi è quindi necessario effettuare una sessione OLAP, ovvero un percorso di navigazione all'interno del cubo. Si tratta sostanzialmente di una sequenza di query che vengono applicate in sequenza. Possiamo vederla un po' come una sessione incrementale. Ogni passo della sessione di analisi è scandito dall'applicazione di un operatore OLAP, che trasforma l'ultima interrogazione effettuata in una nuova interrogazione.
-	\item \textit{Reportistica semi-statica}: Si tratta di un approccio intermedio tra la Reporistica statica e l'OLAP. La reportistica statica è troppo poco flessibile mentre le operazioni OLAP non sono adatte agli utenti finali perché potrebbero approfittare della libertà per effettuare numerose operazioni molto dispendiose. Inoltre la libertà conferita all'utente finale può portarlo a creare aggregati strani, per esempio mischiando operazioni che non hanno alcun senso ai fini di business. Sostanzialmente La reportistica semi statica è equivalente a OLAP, ma vengono preimpostati dei vincoli che l'utente non può oltrepassare.
-\end{itemize}
-
-\subsubsection{Operatori OLAP}
-
-\begin{itemize}
-	\item \textit{roll-up}: Roll-up significa sostanzialmente arrotolare. Quelli che fa l'operatore di roll-u è sostanzialmente aggregare su una dimensione.
-	\item \textit{drill-down}: L'opposto del roll-up, da un cubo più aggregato si passa ad un cubo più dettagliato. L'operatore drill-down disaggrega i dati. La sparsità tenderà ad aumentare. SI può anche completamente aggiungere una nuova dimensione non presente.
-	\item \textit{slice-and-dice}: Essendo le operazioni di slicing e dicing piuttosto simili (sempre di clausole WHERE si tratta) le due operazioni sono compatatte in un unico operatore OLAP.
-	\item \textit{pivoting}:  Non altera i dati ma li risistema, per esempio spostando un dato in colonna in riga o viceversa. Si tratta di un'operatore puramente estetico.
-	\item \textit{drill-across}: Si tratta di un operatore che mette insieme due cubi differenti, effettuando quello che in SQL sarebbe una specie di operatore JOIN.
+	\item \textbf{Reportistica}: conoscenze informatiche non richieste. Orientato agli utenti, legato ad operazioni che vengono svolte periodicamente. Le query sono pre-identificate nella fase di analisi dei requisiti e vengono congelate nella logica applicativa degli utenti. Non è possibile interagire con il risultato una volta che viene visualizzato, in quanto è statico. I risultati sono spesso corredati da grafici di vari tipi.
+	\item \textbf{OLAP}: richiede all'utente di saper utilizzare la UI del software utilizzato e di saper ragionare in modo multidimensionale. Le necessità degli utenti non sono prevedibili ed è necessario essere il più flessibili possibili. Per effettuare un'analisi è quindi necessario effettuare una sessione OLAP, ovvero un percorso di navigazione all'interno del cubo. Si tratta sostanzialmente di una sequenza di query che vengono applicate in sequenza. Possiamo vederla un po' come una sessione incrementale. Ogni passo della sessione di analisi è scandito dall'applicazione di un operatore OLAP, che trasforma l'ultima interrogazione effettuata in una nuova interrogazione.
+	\item \textbf{Reportistica semi-statica}: Si tratta di un approccio intermedio tra la Reporistica statica e l'OLAP. La reportistica statica è troppo poco flessibile mentre le operazioni OLAP non sono adatte agli utenti finali perché potrebbero approfittare della libertà per effettuare numerose operazioni molto dispendiose. Inoltre la libertà conferita all'utente finale può portarlo a creare aggregati strani, per esempio mischiando operazioni che non hanno alcun senso ai fini di business. Sostanzialmente la reportistica semi statica è equivalente a OLAP, ma vengono preimpostati dei vincoli che l'utente non può oltrepassare.
 \end{itemize}
