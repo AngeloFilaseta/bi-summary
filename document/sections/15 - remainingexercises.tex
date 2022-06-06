@@ -53,7 +53,7 @@ A differenza della condivisione non ci sono due istanze dell'attributo ma uno so
 \subsubsection{Attributo Cross-dimensionale}
 Le due dimensioni che creano l'attributo cross-dimensionale collassano entrambe sull'attributo cross. Quindi  se \textbf{a} e \textbf{b} portano a  \textbf{c}, il group by {\textbf{ab}} collassa direttamente in {\textbf{c}}.
 \subsubsection{Arco Multiplo}
-Essendo l'associazione tra di due punti dell'arco multiplo una molti a molti, è possibile (anche se ha poco senso) avere un group by che comprende entrambi i valori. Quindi un arco multiplo da cui parte \textbf{a} che va verso \textbf{b} passa da \textbf{a} ad \textbf{ab}  che poi si divide in \textbf{a} e \textbf{b} che convergono a {}. In pratica sviluppare l'arco multiplo equivale a fare un push-down dell'arco, facendolo diventare un normale arco che parte dal livello inferiore rispetto all'origine.
+Essendo l'associazione tra di due punti dell'arco multiplo una molti a molti, è possibile (anche se ha poco senso) avere un group by che comprende entrambi i valori. Quindi un arco multiplo da cui parte \textbf{a} che va verso \textbf{b} passa da \textbf{a} ad \textbf{ab}  che poi si divide in \textbf{a} e \textbf{b} che convergono a \{\}. In pratica sviluppare l'arco multiplo equivale a fare un push-down dell'arco, facendolo diventare un normale arco che parte dal livello inferiore rispetto all'origine.
 \subsection{Miglior punto per Snowflake}
 Lo scopo è trovare euristicamente il miglior punto per fare snowflake su uno schema di fatto. Il punto migliore è (tranne in casi particolari) sempre quello in cui il rapporto tra le cardinali è maggiore. Una volta trovato il punto migliore è sufficiente effettuare la classica progettazione logica. Se l’esercizio chiede il calcolo del peso della soluzione trovata è sufficiente utilizzare la solita formula $pesotupla \cdot cardinality$.
 \subsection{Trovare numero eventi primari entro cui junk table è migliore}
@@ -64,6 +64,15 @@ Quel che può aver senso fare è considerare tutte le coppie e cercare la minima
 \begin{warn}
 	Può essere utile ricordarsi come procedere con i group by se sono presenti alcuni costrutti particolari. Alcune indicazioni in sottosezione \ref{retmul}.
 \end{warn}
-\subsection{Scenari temporali e viste materializzate}
-In questi esercizi ancora una volta si chiede di effettuare progettazione logica, ma in aggiunta si chiede di materializzare delle viste e di gestire casi in cui si vogliono prendere in considerazione diversi scenari temporali. Se gli scenari temporali interessanti in una relazione sono solo di un tipo tra 1 e 2, cioè verità storica o attualizzazione, lo schema non subisce alcun tipo di impatto. Nel caso in cui si agisce su più di uno scenario temporale o sulla retrodatazione di entra nel tipo 3, e in questo caso si agisce sullo schema. Si aggiunge nella DT interessata il campo di data inizio e data fine validità e il “master” ossia il vecchio record di riferimento. Per materializzare una vista è necessario aggiungere delle Fact Table in cui le chiavi sono surrogati degli attributi richiesti. I surrogati non compaiono dal nulla, bisogna aggiungere delle tabelle, o facendo snowflake sullo schema originale o semplicemente replicando le tabelle.
-\newpage
+\subsection{Scenari temporali}
+In questi esercizi ancora una volta si chiede di effettuare progettazione logica, ma in aggiunta si chiede di materializzare delle viste e di gestire casi in cui si vogliono prendere in considerazione diversi scenari temporali.
+\begin{itemize}
+	\item Se gli scenari temporali interessanti in una relazione sono solo di UN tipo tra 1 e 2, cioè verità storica OPPURE attualizzazione, lo schema non subisce alcun tipo di impatto.
+	\item Nel caso in cui si agisce su più di uno scenario temporale o sulla retrodatazione si entra nel tipo 3. In questo caso si agisce sullo schema. Si aggiunge nella DT interessata il campo di "data inizio" e "data fine" validità e il “master” ossia il vecchio record di riferimento.
+\end{itemize}
+\subsection{Materializzazione viste}
+Per materializzare una vista è necessario aggiungere delle Fact Table in cui le chiavi sono surrogati degli attributi richiesti. I surrogati non compaiono dal nulla, bisogna aggiungere delle tabelle:
+\begin{itemize}
+	\item facendo snowflake sullo schema originale;
+	\item creando nuove tabelle in cui il contenuto è ridondato rispetto a quelle di partenza.
+\end{itemize}
