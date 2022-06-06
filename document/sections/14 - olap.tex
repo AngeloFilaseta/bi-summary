@@ -1,4 +1,4 @@
-\section{Esercizi OLAP (Laboratorio - Modulo 2}
+\section{Esercizi OLAP (Laboratorio - Modulo 2)}
 \begin{itemize}
 	\item Dopo essersi connessi al DB è necessario trascinare la FT e le DT nello spazio centrale e fare i dovuti collegamenti tra le tabelle, specificando le chiavi esterne.
 	\item Se alcune tabelle vengono utilizzate più volte non bisogna utilizzare sempre la stessa ma replicarla più volte. Capita spesso nel caso delle date. In questo caso sarà necessario dare nomi diversi alle tabelle.
@@ -49,15 +49,15 @@ Si possono creare nuovi campi a partire da quelli che abbiamo. Ci sono più modi
 	\item \textbf{Campi calcolati}: Si creano campi in base a formule che specifica l'utente. Si può fare a diversi livelli di granularità:
 	\begin{itemize}
 		\item Line granularity: per esempio:
-		\begin{minted}{javascript}
+		\begin{minted}{sql}
 [Extendedprice] * [Quantity]
 		\end{minted}
 		\item Aggregated granularity: per esempio:\newline
-		\begin{minted}{javascript}
+		\begin{minted}{sql}
 SUM(IF([Tax]>0) THEN 1 ELSE 0 END) / COUNT([Quantity])
 		\end{minted}
 		Si possono anche creare campi categorici:
-		\begin{minted}{javascript}
+		\begin{minted}{sql}
 IF([Tax]>0) THEN 'Taxed' ELSE 'Not Taxed' END
 		\end{minted}
 		\item\textbf{ Level of detail (LOD) expressions}: permettono di definire una formula utilizzando un group-by-set diverso da quello della query. Le Keyword utilizzabili sono:

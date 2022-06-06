@@ -30,18 +30,18 @@ Partiamo in modo incrementale, iniziando con un semplice flusso che evolveremo n
 	Una soluzione identica a quella sopra riportata ma che utilizza meno join è la seguente.
 	\centeredImage{img/mod2/labetl3.png}{Flusso ETL - Alimentazione incrementale - Soluzione Semplificata}{0.6}
 	In questo caso si effettua un full outer join. Otterremo una tabella che contiene tutti i dati ma NULL in corrispondenza dei campi mancanti. Nel passo di pulizia poi attraverso l'opzione \textit{Campo Calcolato} si può creare un campo attraverso uno script, per esempio, per inserire il campo \textit{size} la regola da utilizzare è:
-	\begin{verbatim}
-		IF(ISNULL([new_size])) THEN [dt_size] ELSE [size] END
-	\end{verbatim}
+	\begin{minted}{sql}
+IF(ISNULL([new_size])) THEN [dt_size] ELSE [size] END
+	\end{minted}
 	Ovviamente è necessario creare un campo calcolato per ogni attributo che desideriamo mantenere. Una volta aggiunti tutti i campi nuovi possiamo cancellare tutti i vecchi e rinominare quelli creati togliendo il prefisso scelto.
 	\item \textbf{Flusso con Chiave Surrogata}:
 	Serve utilizzare una tabella in più per mantenere le corrispondenze tra surrogato e chiave della tabella di partenza:
-	\begin{verbatim}
-		create table hash_dt_part (
-			partkey integer primary key,
-			id serial
-		);
-	\end{verbatim}
+	\begin{minted}{sql}
+create table hash_dt_part (
+	partkey integer primary key,
+	id serial
+);
+	\end{minted}
 	\centeredImage{img/mod2/labetlsurrogate1.png}{Flusso ETL - Chiave surrogata}{0.85}
 	\begin{itemize}
 		\item Si identificano con un outer join \textbf{sulla tabella operazionale} i nuovi record;
@@ -69,11 +69,11 @@ union
 select distinct(l_receiptdatedate) from tpcd.lineitem
 	\end{minted}
 	\item Se viene richiesto di creare una struttura temporale per la DT della data, il mese in anno si crea utilizzando la seguente formula per il campo calcolato:
-	\begin{verbatim}
-	str(DATEPART('month', [d])) + '-' + str(DATEPART('year', [d]))
-	\end{verbatim}
+	\begin{minted}{sql}
+str(DATEPART('month', [d])) + '-' + str(DATEPART('year', [d]))
+	\end{minted}
 	Per l'anno è  ancora più facile:
-	\begin{verbatim}
-	str(DATEPART('year', [d]))
-	\end{verbatim}
+	\begin{minted}{sql}
+str(DATEPART('year', [d]))
+	\end{minted}
 \end{itemize}
