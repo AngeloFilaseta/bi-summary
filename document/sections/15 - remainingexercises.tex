@@ -68,7 +68,7 @@ Quel che può aver senso fare è considerare tutte le coppie e cercare la minima
 In questi esercizi ancora una volta si chiede di effettuare progettazione logica, ma in aggiunta si chiede di materializzare delle viste e di gestire casi in cui si vogliono prendere in considerazione diversi scenari temporali.
 \begin{itemize}
 	\item Se gli scenari temporali interessanti in una relazione sono solo di UN tipo tra 1 e 2, cioè verità storica OPPURE attualizzazione, lo schema non subisce alcun tipo di impatto.
-	\item Nel caso in cui si agisce su più di uno scenario temporale o sulla retrodatazione si entra nel tipo 3. In questo caso si agisce sullo schema. Si aggiunge nella DT interessata il campo di "data inizio" e "data fine" validità e il “master” ossia il vecchio record di riferimento.
+	\item Nel caso in cui si agisce su più di uno scenario temporale o sulla retrodatazione si entra nel tipo 3. In questo caso si agisce sullo schema. Si aggiunge nella DT interessata (quella in cui è presente il collegamento interessato) il campo di "data inizio" e "data fine" validità e il “master” ossia il vecchio record di riferimento.
 \end{itemize}
 \subsection{Materializzazione viste}
 Per materializzare una vista è necessario aggiungere delle Fact Table in cui le chiavi sono surrogati degli attributi richiesti. I surrogati non compaiono dal nulla, bisogna aggiungere delle tabelle:
@@ -76,3 +76,6 @@ Per materializzare una vista è necessario aggiungere delle Fact Table in cui le
 	\item facendo snowflake sullo schema originale;
 	\item creando nuove tabelle in cui il contenuto è ridondato rispetto a quelle di partenza.
 \end{itemize}
+\begin{warn}[Misure di supporto:]
+	Si ricorda che le misure di supporto nelle Fact Table delle viste sono necessarie (basta un count) se vogliamo poter utilizzare le misure non completamente additive su determinate dimensioni.
+\end{warn}
